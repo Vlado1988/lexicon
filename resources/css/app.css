@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.btn {
+    padding: .3rem 1rem;
+    outline: 2px solid transparent;
+    border: 2px solid transparent;
+    transition: .3s;
+}
+.btn:hover,
+.btn:focus {
+    border-color: #fff;
+}
+
+.btn-translate {
+    border-color: #ed903f;
+    outline-color: #ed903f;
+    background-color: #ed903f;
+    color: #f3f3f3ff;
+}
+
+header,
+main {
+    padding: .5rem 1rem;
+}
+
+.translation-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-block: 2rem;
+}
+
+.translation-table td {
+    padding: .5rem;
+}
+
+.translation-table td:first-child {
+    vertical-align: top;
+    width: 1px;
+    white-space: nowrap;
+    padding-right: 1rem;
+}
+
+.translation-item {
+    position: relative;
+}
+
+.translation-item::before {
+    content: "-";
+    position: absolute;
+    left: -1rem;
+}
+
+.lang-select-container {
+    flex-direction: column;
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+}
+
+.lang-select-container > * {
+    width: 100%;
+}
+
+@media screen and (min-width: 400px) {
+    .lang-select-container {
+        flex-direction: row;
+    }
+
+    .lang-select-container > * {
+        width: auto;
+        min-width: auto;
+    }
+}
