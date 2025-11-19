@@ -211,3 +211,31 @@ textarea::placeholder {
 .target_word_list_item span + span > svg {
     padding: .25rem;
 }
+
+.progressbar {
+    border: 1px solid green;
+    border-radius: 6px;
+    text-align: center;
+    padding: .25rem;
+    position: relative;
+    overflow: hidden;
+    display: none;
+}
+.progressbar.visible {
+    display: block;
+}
+
+.progress_percentage {
+    position: relative;
+    z-index: 2;
+}
+
+.progress {
+    height: 100%;
+    width: 0%;
+    background-color: #09bd0cff;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}

@@ -252,3 +252,49 @@ window.buildTargetWordListItem = function(word) {
             <input type="hidden" name="target_words[]" value="${word}">
         </div>`;
 }
+
+window.importTranslations = function() {
+    $('#importForm').on('submit', function(e) {
+        e.preventDefault();
+
+        const form = $(this)[0];
+        let formData = new FormData(form);
+
+        const importForm = $('#importProgressbar');
+        importForm.addClass('visible');
+
+        $.ajax({
+            method: 'POST',
+            url: '/admin/import/init',
+            data: formData,
+            processData: false,
+            contentType: false,
+            xhr: function() {
+                const xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener('progress', function(e) {
+                    if(e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        importForm.find('.progress_percentage').text(percentComplete + '%');
+                        importForm.find('.progress').css('width', percentComplete + '%');
+                    }
+                }, false);
+                return xhr;
+            },
+            success: function(response) {
+                if(response.status === 'success') {
+                    toastr.success(response.message);
+
+                    setTimeout(function() {
+                        importForm.removeClass('visible');
+                    }, 300);
+                }
+                else if(response.status === 'error') {
+                    toastr.error(response.message);
+                }
+            },
+            error: function (xhr, status, error) {
+                toastr.error(error);
+            }
+        });
+    });
+}

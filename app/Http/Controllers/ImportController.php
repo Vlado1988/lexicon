@@ -16,12 +16,31 @@ class ImportController extends Controller
 
     public function initImport(Request $request)
     {
-        $request->validate([
-            'file' => ['required', 'mimetypes:text/plain,text/csv,application/csv,application/vnd.ms-excel,application/json'],
-        ]);
+        $errorMsg = '';
+        if(!$request->hasFile('file')) {
+            $errorMsg = 'File is required';
+        }
+
+        $file = $request->file('file');
+        $fileMimeType = $file->getMimeType();
+        $allowedMimeTypes = [
+            'text/plain',
+            'text/csv',
+            'application/csv',
+            'application/vnd.ms-excel',
+            'application/json'
+        ];
+
+        if(!in_array($fileMimeType, $allowedMimeTypes)) {
+            $errorMsg = 'Unsupported file format';
+        }
+
+        if(!empty($errorMsg)) {
+            return response(['status' => 'error', 'message' => $errorMsg]);
+        }
 
         $file = $request->file;
-        $fileExtension = $request->file('file')->getClientOriginalExtension();
+        $fileExtension = $file->getClientOriginalExtension();
 
         // process CSV file data
         if($fileExtension == 'csv') {
@@ -29,7 +48,7 @@ class ImportController extends Controller
             $data = [];
 
             if (($handle = fopen($filePath, "r")) !== false) {
-                // načítaj hlavičku
+                // load headers
                 $headers = fgetcsv($handle, 0, ";");
 
                 while (($row = fgetcsv($handle, 0, ";")) !== false) {
@@ -66,6 +85,8 @@ class ImportController extends Controller
                 $this->insertTranslation($item['word'], $translations, $sourceLang, $targetLang);
             }
         }
+
+        return response(['status' => 'success', 'message' => 'Import Done']);
     }
 
     private function insertTranslation(string $source_word, array $target_words, string $source_lang, string $target_lang)
