@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\Language;
 use App\Models\Translation;
 use App\Models\Word;
@@ -14,44 +15,26 @@ class ImportController extends Controller
         return view('admin.import.index');
     }
 
-    public function initImport(Request $request)
+    public function init(Request $request)
     {
-        $errorMsg = '';
-        if(!$request->hasFile('file')) {
-            $errorMsg = 'File is required';
-        }
-
-        $file = $request->file('file');
-        $fileMimeType = $file->getMimeType();
-        $allowedMimeTypes = [
-            'text/plain',
-            'text/csv',
-            'application/csv',
-            'application/vnd.ms-excel',
-            'application/json'
-        ];
-
-        if(!in_array($fileMimeType, $allowedMimeTypes)) {
-            $errorMsg = 'Unsupported file format';
-        }
-
-        if(!empty($errorMsg)) {
-            return response(['status' => 'error', 'message' => $errorMsg]);
-        }
+        $request->validate([
+            'file' => ['required', 'mimetypes:text/plain,text/csv,application/csv,application/vnd.ms-excel,application/json'],
+        ]);
 
         $file = $request->file;
-        $fileExtension = $file->getClientOriginalExtension();
+        $fileExtension = $request->file('file')->getClientOriginalExtension();
 
         // process CSV file data
         if($fileExtension == 'csv') {
             $filePath = $file->getRealPath();
             $data = [];
+            $delimiter = ";";
 
             if (($handle = fopen($filePath, "r")) !== false) {
-                // load headers
-                $headers = fgetcsv($handle, 0, ";");
+                // načítaj hlavičku
+                $headers = fgetcsv($handle, 0, $delimiter);
 
-                while (($row = fgetcsv($handle, 0, ";")) !== false) {
+                while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
                     if (count($row) == 0 || trim(implode('', $row)) === '') continue; // preskoč prázdne riadky
 
                     $data[] = array_combine($headers, $row);
@@ -70,7 +53,6 @@ class ImportController extends Controller
                 );
             }
         }
-        // process JSON file data
         else if($fileExtension == 'json') {
             $filePath = $file->getRealPath();
 
@@ -85,8 +67,6 @@ class ImportController extends Controller
                 $this->insertTranslation($item['word'], $translations, $sourceLang, $targetLang);
             }
         }
-
-        return response(['status' => 'success', 'message' => 'Import Done']);
     }
 
     private function insertTranslation(string $source_word, array $target_words, string $source_lang, string $target_lang)
@@ -161,5 +141,107 @@ class ImportController extends Controller
         }
 
         return $translationsCreated;
+    }
+
+    public function getProgress($jobId)
+    {
+        $percent = cache()->get("import_progress_{$jobId}", 0);
+        return response()->json(['percent' => $percent]);
+    }
+
+
+
+    public function importBatch(Request $request)
+    {
+        $type = $request->input('type');
+        $jobId = $request->input('jobId');
+        $total = (int) $request->input('total');
+
+        if($type === 'json') {
+            $batch = json_decode($request->input('batch'), true);
+            $sourceLang = $request->input('sourceLang');
+            $targetLang = $request->input('targetLang');
+
+            foreach($batch as $item) {
+                $translations = $item['translation'] ?? [];
+                if(is_string($translations)) $translations = [$translations];
+
+                $this->insertTranslation(
+                    $item['word'],
+                    $translations,
+                    $sourceLang,
+                    $targetLang
+                );
+            }
+
+            // update progress
+            $processed = cache()->get("import_progress_{$jobId}", 0);
+            $processed += count($batch);
+            cache()->put("import_progress_{$jobId}", $processed, 3600);
+
+            return response(['status' => 'success']);
+        }
+    }
+
+    public function uploadCSV(Request $request)
+    {
+        $jobId = $request->input('jobId');
+
+        if(!$request->hasFile('file')) {
+            return response(['status' => 'error', 'message' => 'File is missing']);
+        }
+
+        $file = $request->file('file');
+        $filePath = $file->getRealPath();
+        $delimiter = ";";
+
+        $rows = [];
+        if(($handle = fopen($filePath, "r")) !== false) {
+            $headers = fgetcsv($handle, 0, $delimiter);
+
+            while(($row = fgetcsv($handle, 0, $delimiter)) !== false) {
+                if(count($row) == 0 || trim(implode('', $row)) === '') continue;
+                $rows[] = array_combine($headers, $row);
+            }
+            fclose($handle);
+        }
+
+        $batchSize = 300;
+        $total = count($rows);
+
+        cache()->put("import_total_{$jobId}", $total, 3600);
+        cache()->put("import_progress_{$jobId}", 0, 3600);
+
+        $batches = array_chunk($rows, $batchSize);
+
+        foreach($batches as $batch) {
+            foreach($batch as $item) {
+                $translations = $item['translation'] ?? [];
+                if(is_string($translations)) $translations = [$translations];
+
+                $this->insertTranslation(
+                    $item['word'],
+                    array_map('trim', $translations),
+                    $item['source_lang'],
+                    $item['target_lang']
+                );
+            }
+
+            $processed = cache()->get("import_progress_{$jobId}", 0);
+            $processed += count($batch);
+            cache()->put("import_progress_{$jobId}", $processed, 3600);
+        }
+
+        return response(['status' => 'success']);
+    }
+
+    public function importStatus($jobId)
+    {
+        $total = cache()->get("import_total_{$jobId}", 1);
+        $processed = cache()->get("import_progress_{$jobId}", 0);
+
+        $percent = ($processed / $total) * 100;
+
+        return response(['percent' => $percent]);
     }
 }

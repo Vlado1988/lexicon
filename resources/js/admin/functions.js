@@ -258,43 +258,133 @@ window.importTranslations = function() {
         e.preventDefault();
 
         const form = $(this)[0];
-        let formData = new FormData(form);
+        const fileInput = form.querySelector('input[name="file"]');
+        const file = fileInput.files[0];
+
+        if(!file) {
+            toastr.error('File not selected');
+            return;
+        }
 
         const importForm = $('#importProgressbar');
         importForm.addClass('visible');
 
+        const jobId = 'import_' + Date.now();
+
+        const ext = file.name.split('.').pop().toLowerCase();
+
+        if(ext === 'json') {
+            handleJSONUpload(file, jobId, importForm);
+        } else if (ext === 'csv') {
+            handleCSVUpload(file, jobId, importForm);
+        } else {
+            toastr.error('Format not supported');
+        }
+    });
+
+    function handleJSONUpload(file, jobId, importForm) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            let json;
+            try {
+                json = JSON.parse(e.target.result);
+            } catch (err) {
+                toastr.error('Invalid JSON: ' + err.message);
+                return;
+            }
+
+            const entries = json.entries;
+            const sourceLang = json.meta.source_lang;
+            const targetLang = json.meta.target_lang;
+
+            const batchSize = 300;
+            let currentBatch = 0;
+
+            async function sendNextBatch() {
+                const start = currentBatch * batchSize;
+                const end = start + batchSize;
+                const batch = entries.slice(start, end);
+
+                if(batch.length === 0) {
+                    toastr.success('Import Done');
+                    hideProgress(importForm);
+                    return;
+                }
+
+                const formData = new FormData();
+                const token = $('meta[name="csrf-token"]').attr('content');
+                formData.append('_token', token);
+                formData.append('type', 'json');
+                formData.append('jobId', jobId);
+                formData.append('batch', JSON.stringify(batch));
+                formData.append('total', entries.length);
+                formData.append('sourceLang', sourceLang);
+                formData.append('targetLang', targetLang);
+
+                await $.ajax({
+                    method: 'POST',
+                    url: '/admin/import/batch',
+                    data: formData,
+                    processData: false,
+                    contentType: false
+                });
+
+                const percent = Math.round( (end / entries.length) * 100 );
+                importForm.find('.progress_percentage').text(percent + '%');
+                importForm.find('.progress').css('width', percent + '%');
+
+                currentBatch++;
+                sendNextBatch();
+            }
+
+            sendNextBatch();
+        };
+
+        reader.readAsText(file);
+    }
+
+    function handleCSVUpload(file, jobId, importForm) {
+        const formData = new FormData();
+        const token = $('meta[name="csrf-token"]').attr('content');
+        formData.append('_token', token);
+        formData.append('type', 'csv');
+        formData.append('jobId', jobId);
+        formData.append('file', file);
+
         $.ajax({
             method: 'POST',
-            url: '/admin/import/init',
+            url: '/admin/import/uploadCsv',
             data: formData,
             processData: false,
             contentType: false,
-            xhr: function() {
-                const xhr = new window.XMLHttpRequest();
-                xhr.upload.addEventListener('progress', function(e) {
-                    if(e.lengthComputable) {
-                        const percentComplete = (e.loaded / e.total) * 100;
-                        importForm.find('.progress_percentage').text(percentComplete + '%');
-                        importForm.find('.progress').css('width', percentComplete + '%');
-                    }
-                }, false);
-                return xhr;
+            success: function() {
+                checkCSVProgress(jobId, importForm);
             },
-            success: function(response) {
-                if(response.status === 'success') {
-                    toastr.success(response.message);
-
-                    setTimeout(function() {
-                        importForm.removeClass('visible');
-                    }, 300);
-                }
-                else if(response.status === 'error') {
-                    toastr.error(response.message);
-                }
-            },
-            error: function (xhr, status, error) {
-                toastr.error(error);
+            error: function(xhr) {
+                toastr.error('CSV upload error');
             }
         });
-    });
+    }
+
+    function checkCSVProgress(jobId, importForm) {
+        $.get('/admin/import/status/' + jobId, function(data) {
+            const percent = Math.round(data.percent);
+            importForm.find('.progress_percentage').text(percent + '%');
+            importForm.find('.progress').css('width', percent + '%');
+
+            if(percent < 100) {
+                setTimeout(() => checkCSVProgress(jobId, importForm), 500);
+            }
+            else {
+                hideProgress(importForm);
+            }
+        })
+    }
+
+    function hideProgress(importForm) {
+        setTimeout(function() {
+            importForm.removeClass('visible');
+        }, 300);
+    }
 }
