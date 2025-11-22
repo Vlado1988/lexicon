@@ -39,17 +39,18 @@ class TranslationDataTable extends DataTable
                 return $query->id;
             })
             ->addColumn('source_word', function($query) {
-                return $query->source?->word ?: $query->source_word;
-
+                // return $query->source?->word ?: $query->source_word;
+                return $query->source_word;
             })
             ->addColumn('target_word', function($query) {
-                return $query->target?->word ?: $query->target_word;
+                // return $query->target?->word ?: $query->target_word;
+                return $query->target_word;
             })
             ->filterColumn('source_word', function($query, $keyword) {
-                $query->where('sw.word', 'LIKE', "%{$keyword}%");
+                $query->where('source_word', 'LIKE', "%{$keyword}%");
             })
             ->filterColumn('target_word', function($query, $keyword) {
-                $query->where('tw.word', 'LIKE', "%{$keyword}%");
+                return $query->where('target_word', 'LIKE', "%{$keyword}%");
             })
             ->rawColumns(['action', 'translation'])
             ->setRowId('id');
@@ -84,6 +85,8 @@ class TranslationDataTable extends DataTable
                         data.sourceLangId = $('#source_word_language').val();
                         data.targetLangId = $('#target_word_language').val();
                     ")
+                    ->serverSide(true)
+                    ->processing(true)
                     ->orderBy(0)
                     ->selectStyleSingle()
                     ->buttons([

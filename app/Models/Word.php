@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use DB;
 use Illuminate\Database\Eloquent\Model;
 
 class Word extends Model
@@ -34,30 +35,39 @@ class Word extends Model
 
     public static function getTranslationsForLanguages($sourceLangId, $targetLangId)
     {
-        return self::query()
-            ->from('words as sw')
-            ->join('translations as t', function ($join) {
-                $join->on('t.source_word_id', '=', 'sw.id')
-                    ->orOn('t.target_word_id', '=', 'sw.id');
-            })
-            ->join('words as tw', function ($join) use ($targetLangId) {
-                $join->on('tw.id', '=', 't.target_word_id')
-                        ->where('t.source_word_id', '=', \DB::raw('sw.id'))
-                        ->where('tw.lang_id', '=', $targetLangId)
-                    ->orOn(function ($q) use ($targetLangId) {
-                        $q->on('tw.id', '=', 't.source_word_id')
-                        ->where('t.target_word_id', '=', \DB::raw('sw.id'))
-                        ->where('tw.lang_id', '=', $targetLangId);
-                    });
-            })
+        $q1 = DB::table('words as sw')
+            ->join('translations as t', 't.source_word_id', '=', 'sw.id')
+            ->join('words as tw', 'tw.id', '=', 't.target_word_id')
             ->where('sw.lang_id', $sourceLangId)
-            ->groupBy('sw.id', 'sw.word')
-            ->selectRaw('
-                sw.id as id,
-                sw.word as source_word,
-                GROUP_CONCAT(DISTINCT tw.word ORDER BY tw.id SEPARATOR ", ") as target_word
-            ')
-            ->orderByDesc('sw.id');
+            ->where('tw.lang_id', $targetLangId)
+            ->select(
+                'sw.id as id',
+                'sw.word as source_word',
+                'tw.word as target_word'
+            );
+
+        $q2 = DB::table('words as sw')
+            ->join('translations as t', 't.target_word_id', '=', 'sw.id')
+            ->join('words as tw', 'tw.id', '=', 't.source_word_id')
+            ->where('sw.lang_id', $sourceLangId)
+            ->where('tw.lang_id', $targetLangId)
+            ->select(
+                'sw.id as id',
+                'sw.word as source_word',
+                'tw.word as target_word'
+            );
+
+        $union = $q1->union($q2);
+
+        return Word::query()
+            ->fromSub($union, 'x')
+            ->select(
+                'x.id',
+                'x.source_word',
+                DB::raw('GROUP_CONCAT(DISTINCT x.target_word ORDER BY x.target_word SEPARATOR ", ") as target_word')
+            )
+            ->groupBy('x.id', 'x.source_word')
+            ->orderByDesc('x.id');
     }
 
     public static function getTranslationForLanguages($wordId, $sourceLangId, $targetLangId)
