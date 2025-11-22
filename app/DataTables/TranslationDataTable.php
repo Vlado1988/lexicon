@@ -39,11 +39,9 @@ class TranslationDataTable extends DataTable
                 return $query->id;
             })
             ->addColumn('source_word', function($query) {
-                // return $query->source?->word ?: $query->source_word;
                 return $query->source_word;
             })
             ->addColumn('target_word', function($query) {
-                // return $query->target?->word ?: $query->target_word;
                 return $query->target_word;
             })
             ->filterColumn('source_word', function($query, $keyword) {
