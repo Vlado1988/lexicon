@@ -216,7 +216,7 @@ class ImportController extends Controller
 
         foreach($batches as $batch) {
             foreach($batch as $item) {
-                $translations = $item['translation'] ?? [];
+                $translations = $item['translations'] ?? [];
                 if(is_string($translations)) $translations = [$translations];
 
                 $this->insertTranslation(
