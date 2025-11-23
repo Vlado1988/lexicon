@@ -63,6 +63,8 @@ class VocabularyDataTable extends DataTable
                     ->setTableId('vocabulary-table')
                     ->columns($this->getColumns())
                     ->minifiedAjax()
+                    ->serverSide(true)
+                    ->processing(true)
                     ->orderBy(0)
                     ->selectStyleSingle()
                     ->buttons([

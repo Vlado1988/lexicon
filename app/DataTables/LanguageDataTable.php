@@ -55,6 +55,8 @@ class LanguageDataTable extends DataTable
                     ->setTableId('language-table')
                     ->columns($this->getColumns())
                     ->minifiedAjax()
+                    ->serverSide(true)
+                    ->processing(true)
                     ->orderBy(1)
                     ->selectStyleSingle()
                     ->buttons([
