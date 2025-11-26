@@ -259,6 +259,8 @@ window.importTranslations = function() {
 
         const form = $(this)[0];
         const fileInput = form.querySelector('input[name="file"]');
+        const delimiter = $('input#delimiter').val();
+
         const file = fileInput.files[0];
 
         if(!file) {
@@ -276,7 +278,8 @@ window.importTranslations = function() {
         if(ext === 'json') {
             handleJSONUpload(file, jobId, importForm);
         } else if (ext === 'csv') {
-            handleCSVUpload(file, jobId, importForm);
+            loadCSVData(file, delimiter);
+            // handleCSVUpload(file, jobId, importForm);
         } else {
             toastr.error('Format not supported');
         }
@@ -344,6 +347,35 @@ window.importTranslations = function() {
         reader.readAsText(file);
     }
 
+    function loadCSVData(file, delimiter) {
+        const token = $('meta[name="csrf-token"]').attr('content');
+
+        let formData = new FormData();
+        formData.append('_token', token);
+        formData.append('file', file);
+        formData.append('delimiter', delimiter);
+
+        $.ajax({
+            method: 'POST',
+            url: "/admin/import/loadCsvData",
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function(response) {
+                if(response.status === 'success') {
+                    const loadedDataPreviewTable = buildLoadedDataPreviewTable(response.data);
+                    $('#data_preview').html(loadedDataPreviewTable);
+                }
+                else if(response.status === 'error') {
+                    toastr.error(response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                toastr.error(error);
+            }
+        });
+    }
+
     function handleCSVUpload(file, jobId, importForm) {
         const formData = new FormData();
         const token = $('meta[name="csrf-token"]').attr('content');
@@ -386,5 +418,54 @@ window.importTranslations = function() {
         setTimeout(function() {
             importForm.removeClass('visible');
         }, 300);
+    }
+
+    function buildLoadedDataPreviewTable(data) {
+        let html = `
+            <div class="table-wrap my-2 d-flex gap-2 flex-column flex-md-row">
+                <form class="flex-shrink-0" style="min-width: 250px">
+                    <h4 class="fs-5">Uploading schema</h4>
+                    <div class="form-group my-2">
+                        <label for="source_word_name" class="fw-medium">Source Word Name</label>
+                        <input type="text" name="source_word_name" id="source_word_name" class="form-control">
+                    </div>
+                    <div class="form-group my-2">
+                        <label for="translations_name" class="fw-medium">Translations Name</label>
+                        <input type="text" name="translations_name" id="translations_name" class="form-control">
+                    </div>
+                    <div class="form-group my-2">
+                        <label for="source_lang" class="fw-medium">Source Language</label>
+                        <input type="text" name="source_lang" id="source_lang" class="form-control">
+                    </div>
+                    <div class="form-group my-2">
+                        <label for="target_lang" class="fw-medium">Target Language</label>
+                        <input type="text" name="target_lang" id="target_lang" class="form-control">
+                    </div>
+                </form>
+
+                <div class="table grid-table flex-grow-1">
+                    <div class="grid-row header">
+                        <div>Column</div>
+                        <div>Values</div>
+                    </div>
+                    <div class="grid-row">`;
+
+        $.each(data, function(key, item) {
+            html += `
+                <div class="column-cell" title="drag&drop this to set uploading schema" draggable="true">
+                        <span>${key}</span>
+                </div>
+                <div class="values-cell">
+                    <span>${item !== '' && Array.isArray(item) ? item.join(', ') : ''}</span>
+                </div>
+            `;
+        });
+
+        html += `</div>
+                </div>
+            </div>
+        `;
+
+        return html;
     }
 }

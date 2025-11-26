@@ -22,9 +22,15 @@
                             <div class="my-2">
                                 <input type="file" name="file" id="" accept=".csv, .json">
                             </div>
+                            <div class="my-2">
+                                <label for="delimiter">Delimiter</label>
+                                <input type="text" name="delimiter" id="delimiter" class="border rounded w-[50px] text-gray-900" maxlength="2">
+                            </div>
 
                             <button type="submit" class="btn btn-primary my-2" id="importBtn">Import</button>
                         </form>
+
+                        <div id="data_preview"></div>
                     </div>
                 </div>
             </div>

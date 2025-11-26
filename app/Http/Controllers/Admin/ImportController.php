@@ -183,6 +183,44 @@ class ImportController extends Controller
         }
     }
 
+    public function loadCsvData(Request $request)
+    {
+        if(!$request->hasFile('file')) {
+            return response(['status' => 'error', 'message' => 'File is missing', 'data' => null]);
+        }
+
+        $file = $request->file('file');
+        $filePath = $file->getRealPath();
+        $delimiter = $request->input('delimiter') ?: ';';
+        $row = 0;
+
+        if(($handle = fopen($filePath, "r")) !== false) {
+            while(($data = fgetcsv($handle, 1000, $delimiter)) !== false) {
+                // get headers
+                if($row == 0) {
+                    $headers = array_map(fn($h) => str_replace(' ', '_', $h), $data);
+                }
+                else {
+                    $entries[$row - 1] = array_combine($headers, $data);
+                }
+
+                $row++;
+            }
+        }
+
+        $csv_data = [];
+
+        foreach($entries as $key => $item) {
+            foreach($headers as $col => $header) {
+                $csv_data[$header][$key] = $entries[$key][$header];
+            }
+        }
+
+        $loaded_data = array_map('array_filter', $csv_data);
+
+        return response(['status' => 'success', 'message' => 'Data loaded successfully', 'data' => $loaded_data]);
+    }
+
     public function uploadCSV(Request $request)
     {
         $jobId = $request->input('jobId');

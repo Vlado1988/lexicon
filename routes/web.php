@@ -66,6 +66,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
     Route::get('/import', [ImportController::class, 'index'])->name('import.index');
     Route::post('/import/init', [ImportController::class, 'init'])->name('import.init');
     Route::post('/import/batch', [ImportController::class, 'importBatch']);
+    Route::post('/import/loadCsvData', [ImportController::class, 'loadCSVData'])->name('import.loadCSVData');
     Route::post('/import/uploadCsv', [ImportController::class, 'uploadCSV']);
     Route::get('/import/status/{jobId}', [ImportController::class, 'importStatus']);
 } );
