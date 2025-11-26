@@ -41,6 +41,7 @@
         <script>
             $(document).ready(function () {
                 importTranslations();
+                dragAndDropFunctionality();
             });
         </script>
     @endpush

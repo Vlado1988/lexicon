@@ -469,3 +469,22 @@ window.importTranslations = function() {
         return html;
     }
 }
+
+window.dragAndDropFunctionality = function() {
+    $(document).on('dragstart', '.column-cell', function(e) {
+        const $columnName = $(this).text().trim();
+        e.originalEvent.dataTransfer.setData("text/plain", $columnName);
+    });
+
+    $(document).on('dragover', '#source_word_name, #translations_name', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+
+    $(document).on('drop', '#source_word_name, #translations_name', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        $(this).val(e.originalEvent.dataTransfer.getData("text/plain"));
+    });
+}
