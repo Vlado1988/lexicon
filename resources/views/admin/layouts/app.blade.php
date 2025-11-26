@@ -41,7 +41,7 @@
                 <aside>
                     @include('admin.layouts.navbar')
                 </aside>
-                <article class="flex-1">
+                <article class="flex-1 overflow-hidden">
                     {{ $slot }}
                 </article>
             </main>

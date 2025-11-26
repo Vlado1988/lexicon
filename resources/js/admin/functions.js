@@ -422,28 +422,28 @@ window.importTranslations = function() {
 
     function buildLoadedDataPreviewTable(data) {
         let html = `
-            <div class="table-wrap my-2 d-flex gap-2 flex-column flex-md-row">
-                <form class="flex-shrink-0" style="min-width: 250px">
-                    <h4 class="fs-5">Uploading schema</h4>
-                    <div class="form-group my-2">
+            <div class="table-wrap my-2 md:flex gap-2">
+                <form id="importForm">
+                    <h4 class="text-xl font-bold">Uploading schema</h4>
+                    <div class="my-2">
                         <label for="source_word_name" class="fw-medium">Source Word Name</label>
-                        <input type="text" name="source_word_name" id="source_word_name" class="form-control">
+                        <input type="text" name="source_word_name" id="source_word_name" class="border rounded w-full text-gray-900">
                     </div>
-                    <div class="form-group my-2">
+                    <div class="my-2">
                         <label for="translations_name" class="fw-medium">Translations Name</label>
-                        <input type="text" name="translations_name" id="translations_name" class="form-control">
+                        <input type="text" name="translations_name" id="translations_name" class="border rounded w-full text-gray-900">
                     </div>
-                    <div class="form-group my-2">
+                    <div class="my-2">
                         <label for="source_lang" class="fw-medium">Source Language</label>
-                        <input type="text" name="source_lang" id="source_lang" class="form-control">
+                        <input type="text" name="source_lang" id="source_lang" class="border rounded w-full text-gray-900">
                     </div>
-                    <div class="form-group my-2">
+                    <div class="my-2">
                         <label for="target_lang" class="fw-medium">Target Language</label>
-                        <input type="text" name="target_lang" id="target_lang" class="form-control">
+                        <input type="text" name="target_lang" id="target_lang" class="border rounded w-full text-gray-900">
                     </div>
                 </form>
 
-                <div class="table grid-table flex-grow-1">
+                <div class="import-table">
                     <div class="grid-row header">
                         <div>Column</div>
                         <div>Values</div>

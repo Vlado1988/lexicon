@@ -240,3 +240,81 @@ textarea::placeholder {
     z-index: 1;
     transition: .3s;
 }
+
+.table-wrap {
+    max-width: 100%;
+    overflow-x: hidden;
+    border: 1px solid #ccc;
+    padding: .5rem;
+    background: #e3e3e3ff;
+    border-radius: 4px;
+    color: #333;
+}
+
+#importForm {
+    min-width: 250px;
+}
+
+.import-table {
+    display: grid;
+    grid-template-columns: minmax(min-content, auto) 1fr;
+    flex-grow: 1;
+    border: 1px solid #ccc;
+    border-collapse: collapse;
+    padding: .5rem;
+    font-size: 1rem;
+    cursor: default;
+    height: max-content;
+    /* align-items: center; */
+}
+
+.grid-row {
+    display: contents;
+}
+
+.grid-row.header {
+    font-weight: bold;
+    /* background: #f3f3f3; */
+    border-bottom: 1px solid #e5e5e5;
+    border-right: 1px solid #e5e5e5;
+}
+
+.grid-row.header > div,
+.column-cell,
+.values-cell {
+    padding-block: .25rem;
+    display: flex;
+    align-items: center;
+}
+
+.column-cell {
+    white-space: nowrap;
+    padding: 4px;
+    transition: .4s;
+    /* border: 1px solid gray; */
+}
+
+.column-cell:hover,
+.column-cell:focus {
+    box-shadow: 0 0 5px rgba(100, 100, 100, .2);
+    position: relative;
+    z-index: 1;
+}
+
+.values-cell {
+    overflow: hidden;
+}
+
+.values-cell span {
+    display: block;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    padding: 4px;
+}
+
+@media screen and (min-width: 768px) {
+    .table-wrap {
+        display: flex;
+    }
+}
