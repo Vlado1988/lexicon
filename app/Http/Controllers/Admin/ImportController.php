@@ -18,75 +18,53 @@ class ImportController extends Controller
     public function init(Request $request)
     {
         $request->validate([
-            'file' => ['required', 'mimetypes:text/plain,text/csv,application/csv,application/vnd.ms-excel,application/json'],
+            'file' => ['required', 'mimetypes:text/plain,text/csv,application/csv,application/vnd.ms-excel'],
         ]);
 
         $file = $request->file;
-        $fileExtension = $request->file('file')->getClientOriginalExtension();
 
         // process CSV file data
-        if($fileExtension == 'csv') {
-            $filePath = $file->getRealPath();
-            $data = [];
-            $delimiter = ";";
+        $filePath = $file->getRealPath();
+        $data = [];
+        $delimiter = ";";
 
-            if (($handle = fopen($filePath, "r")) !== false) {
-                // načítaj hlavičku
-                $headers = fgetcsv($handle, 0, $delimiter);
+        if (($handle = fopen($filePath, "r")) !== false) {
+            // načítaj hlavičku
+            $headers = fgetcsv($handle, 0, $delimiter);
 
-                while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
-                    if (count($row) == 0 || trim(implode('', $row)) === '') continue; // preskoč prázdne riadky
+            while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
+                if (count($row) == 0 || trim(implode('', $row)) === '') continue; // preskoč prázdne riadky
 
-                    $data[] = array_combine($headers, $row);
-                }
-                fclose($handle);
+                $data[] = array_combine($headers, $row);
             }
-
-            foreach($data as $item) {
-                $translations = array_map('trim', $item['translation'] ?? null);
-
-                $this->insertTranslation(
-                    $item['word'],
-                    $translations,
-                    $item['source_lang'],
-                    $item['target_lang'],
-                );
-            }
+            fclose($handle);
         }
-        else if($fileExtension == 'json') {
-            $filePath = $file->getRealPath();
 
-            $data = json_decode(file_get_contents($filePath), true);
-            $sourceLang = isset($data['meta']['source_lang']) ? $data['meta']['source_lang'] : null;
-            $targetLang = isset($data['meta']['target_lang']) ? $data['meta']['target_lang'] : null;
-            $entries = isset($data['entries']) ? $data['entries'] : null;
+        foreach($data as $item) {
+            $translations = array_map('trim', $item['translation'] ?? null);
 
-            foreach($entries as $item) {
-                $translations = array_map('trim', $item['translation'] ?? null);
-
-                $this->insertTranslation($item['word'], $translations, $sourceLang, $targetLang);
-            }
+            $this->insertTranslation(
+                $item['word'],
+                $translations,
+                $item['source_lang'],
+                $item['target_lang'],
+            );
         }
     }
 
-    private function insertTranslation(string $source_word, array $target_words, string $source_lang, string $target_lang)
+    private function insertTranslation(string $source_word, array $target_words, string $source_lang_id, string $target_lang_id)
     {
         $translationsCreated = [];
 
-        $sourceWordResult = Word::join('languages', 'languages.id', '=', 'words.lang_id')
-                        ->whereRaw('BINARY words.word = ?', [trim($source_word)])
-                        ->where('languages.code', $source_lang)
-                        ->select('words.*')
+        $sourceWordResult = Word::whereRaw('BINARY words.word = ?', [trim($source_word)])
+                        ->where('lang_id', $source_lang_id)
                         ->first();
 
         if (! $sourceWordResult) {
-            $sourceLangId = Language::where('code', $source_lang)->pluck('id')->first();
-            if($sourceLangId) {
-                $sourceWordResult = Word::create([
-                    'word' => trim($source_word),
-                    'lang_id' => $sourceLangId,
-                ]);
-            }
+            $sourceWordResult = Word::create([
+                'word' => trim($source_word),
+                'lang_id' => $source_lang_id,
+            ]);
         }
 
         $sourceWordId = $sourceWordResult->id;
@@ -94,20 +72,15 @@ class ImportController extends Controller
         // Save target words
         foreach($target_words as $targetWord) {
             $targetWordTrimmed = trim($targetWord);
-            $targetWordResult = Word::join('languages', 'languages.id', '=', 'words.lang_id')
-                                    ->whereRaw('BINARY words.word = ?',[$targetWordTrimmed])
-                                    ->where('languages.code', $target_lang)
-                                    ->select('words.*')
+            $targetWordResult = Word::whereRaw('BINARY words.word = ?',[$targetWordTrimmed])
+                                    ->where('lang_id', $target_lang_id)
                                     ->first();
 
             if (! $targetWordResult) {
-                $targetLangId = Language::where('code', $target_lang)->pluck('id')->first();
-                if($targetLangId) {
-                    $targetWordResult = Word::create([
-                        'word' => $targetWordTrimmed,
-                        'lang_id' => $targetLangId,
-                    ]);
-                }
+                $targetWordResult = Word::create([
+                    'word' => $targetWordTrimmed,
+                    'lang_id' => $target_lang_id,
+                ]);
             }
 
             $targetWordId = $targetWordResult->id;
@@ -115,7 +88,7 @@ class ImportController extends Controller
             // If target word already exist, then get his ID
             if($targetWordId === null) {
                 $targetWordId = Word::whereRaw('BINARY word = ?', [$targetWordTrimmed])
-                ->where('lang_id', $targetLangId)
+                ->where('lang_id', $target_lang_id)
                 ->value('id');
             }
 
@@ -151,37 +124,37 @@ class ImportController extends Controller
 
 
 
-    public function importBatch(Request $request)
-    {
-        $type = $request->input('type');
-        $jobId = $request->input('jobId');
-        $total = (int) $request->input('total');
+    // public function importBatch(Request $request)
+    // {
+    //     $type = $request->input('type');
+    //     $jobId = $request->input('jobId');
+    //     $total = (int) $request->input('total');
 
-        if($type === 'json') {
-            $batch = json_decode($request->input('batch'), true);
-            $sourceLang = $request->input('sourceLang');
-            $targetLang = $request->input('targetLang');
+    //     if($type === 'json') {
+    //         $batch = json_decode($request->input('batch'), true);
+    //         $sourceLang = $request->input('sourceLang');
+    //         $targetLang = $request->input('targetLang');
 
-            foreach($batch as $item) {
-                $translations = $item['translation'] ?? [];
-                if(is_string($translations)) $translations = [$translations];
+    //         foreach($batch as $item) {
+    //             $translations = $item['translation'] ?? [];
+    //             if(is_string($translations)) $translations = [$translations];
 
-                $this->insertTranslation(
-                    $item['word'],
-                    $translations,
-                    $sourceLang,
-                    $targetLang
-                );
-            }
+    //             $this->insertTranslation(
+    //                 $item['word'],
+    //                 $translations,
+    //                 $sourceLang,
+    //                 $targetLang
+    //             );
+    //         }
 
-            // update progress
-            $processed = cache()->get("import_progress_{$jobId}", 0);
-            $processed += count($batch);
-            cache()->put("import_progress_{$jobId}", $processed, 3600);
+    //         // update progress
+    //         $processed = cache()->get("import_progress_{$jobId}", 0);
+    //         $processed += count($batch);
+    //         cache()->put("import_progress_{$jobId}", $processed, 3600);
 
-            return response(['status' => 'success']);
-        }
-    }
+    //         return response(['status' => 'success']);
+    //     }
+    // }
 
     public function loadCsvData(Request $request)
     {
@@ -217,25 +190,57 @@ class ImportController extends Controller
         }
 
         $loaded_data = array_map('array_filter', $csv_data);
+        $languages = Language::where('status', 'active')->orderBy('name')->get();
 
-        return response(['status' => 'success', 'message' => 'Data loaded successfully', 'data' => $loaded_data]);
+        return response(['status' => 'success', 'message' => 'Data loaded successfully', 'data' => [
+            'languages' => $languages,
+            'fileData' => $loaded_data,
+        ]]);
     }
 
     public function uploadCSV(Request $request)
     {
         $jobId = $request->input('jobId');
 
+        $sourceWordName = str_replace(' ', '_', $request->sourceWordName);
+        $targetWordName = str_replace(' ', '_', $request->targetWordName);
+        $sourceLangId = $request->sourceLang;
+        $targetLangId = $request->targetLang;
+
+        $errorMsg = null;
+
         if(!$request->hasFile('file')) {
-            return response(['status' => 'error', 'message' => 'File is missing']);
+            $errorMsg = 'File is missing';
+        }
+
+        if(!$sourceWordName) {
+            $errorMsg = 'Source Word Name is required';
+        }
+
+        if(!$targetWordName) {
+            $errorMsg = 'Target Word Name is required';
+        }
+
+        if(!$sourceLangId) {
+            $errorMsg = 'Source Language is required';
+        }
+
+        if(!$targetLangId) {
+            $errorMsg = 'Target Language is required';
+        }
+
+        if($errorMsg) {
+            return response(['status' => 'error', 'message' => $errorMsg]);
         }
 
         $file = $request->file('file');
         $filePath = $file->getRealPath();
-        $delimiter = ";";
+        $delimiter = $request->input('delimiter') ?: ";";
 
         $rows = [];
         if(($handle = fopen($filePath, "r")) !== false) {
             $headers = fgetcsv($handle, 0, $delimiter);
+            $headers = array_map(fn($h) => str_replace(' ', '_', $h), $headers);
 
             while(($row = fgetcsv($handle, 0, $delimiter)) !== false) {
                 if(count($row) == 0 || trim(implode('', $row)) === '') continue;
@@ -254,14 +259,15 @@ class ImportController extends Controller
 
         foreach($batches as $batch) {
             foreach($batch as $item) {
-                $translations = $item['translations'] ?? [];
-                if(is_string($translations)) $translations = [$translations];
+                if(empty($item[$sourceWordName]) || empty($item[$targetWordName])) continue;
+
+                $translations = explode(',', $item[$targetWordName]) ?? [];
 
                 $this->insertTranslation(
-                    $item['word'],
+                    $item[$sourceWordName],
                     array_map('trim', $translations),
-                    $item['source_lang'],
-                    $item['target_lang']
+                    $sourceLangId,
+                    $targetLangId
                 );
             }
 

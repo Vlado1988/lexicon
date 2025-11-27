@@ -254,7 +254,7 @@ window.buildTargetWordListItem = function(word) {
 }
 
 window.importTranslations = function() {
-    $('#importForm').on('submit', function(e) {
+    $('#loadFileForm').on('submit', function(e) {
         e.preventDefault();
 
         const form = $(this)[0];
@@ -268,84 +268,97 @@ window.importTranslations = function() {
             return;
         }
 
-        const importForm = $('#importProgressbar');
-        importForm.addClass('visible');
+        loadCSVData(file, delimiter);
+    });
+
+    $(document).on('submit', '#importForm', function(e) {
+        e.preventDefault();
+
+        const form = $('#loadFileForm')[0];
+        const fileInput = form.querySelector('input[name="file"]');
+
+        const file = fileInput.files[0];
+
+        if(!file) {
+            toastr.error('File not selected');
+            return;
+        }
+
+        const importFormProgressbar = $('#importProgressbar');
+        importFormProgressbar.addClass('visible');
 
         const jobId = 'import_' + Date.now();
 
         const ext = file.name.split('.').pop().toLowerCase();
 
-        if(ext === 'json') {
-            handleJSONUpload(file, jobId, importForm);
-        } else if (ext === 'csv') {
-            loadCSVData(file, delimiter);
-            // handleCSVUpload(file, jobId, importForm);
+        if (ext === 'csv') {
+            handleCSVUpload(file, jobId, importFormProgressbar);
         } else {
             toastr.error('Format not supported');
         }
     });
 
-    function handleJSONUpload(file, jobId, importForm) {
-        const reader = new FileReader();
+    // function handleJSONUpload(file, jobId, importForm) {
+    //     const reader = new FileReader();
 
-        reader.onload = function(e) {
-            let json;
-            try {
-                json = JSON.parse(e.target.result);
-            } catch (err) {
-                toastr.error('Invalid JSON: ' + err.message);
-                return;
-            }
+    //     reader.onload = function(e) {
+    //         let json;
+    //         try {
+    //             json = JSON.parse(e.target.result);
+    //         } catch (err) {
+    //             toastr.error('Invalid JSON: ' + err.message);
+    //             return;
+    //         }
 
-            const entries = json.entries;
-            const sourceLang = json.meta.source_lang;
-            const targetLang = json.meta.target_lang;
+    //         const entries = json.entries;
+    //         const sourceLang = json.meta.source_lang;
+    //         const targetLang = json.meta.target_lang;
 
-            const batchSize = 300;
-            let currentBatch = 0;
+    //         const batchSize = 300;
+    //         let currentBatch = 0;
 
-            async function sendNextBatch() {
-                const start = currentBatch * batchSize;
-                const end = start + batchSize;
-                const batch = entries.slice(start, end);
+    //         async function sendNextBatch() {
+    //             const start = currentBatch * batchSize;
+    //             const end = start + batchSize;
+    //             const batch = entries.slice(start, end);
 
-                if(batch.length === 0) {
-                    toastr.success('Import Done');
-                    hideProgress(importForm);
-                    return;
-                }
+    //             if(batch.length === 0) {
+    //                 toastr.success('Import Done');
+    //                 hideProgress(importForm);
+    //                 return;
+    //             }
 
-                const formData = new FormData();
-                const token = $('meta[name="csrf-token"]').attr('content');
-                formData.append('_token', token);
-                formData.append('type', 'json');
-                formData.append('jobId', jobId);
-                formData.append('batch', JSON.stringify(batch));
-                formData.append('total', entries.length);
-                formData.append('sourceLang', sourceLang);
-                formData.append('targetLang', targetLang);
+    //             const formData = new FormData();
+    //             const token = $('meta[name="csrf-token"]').attr('content');
+    //             formData.append('_token', token);
+    //             formData.append('type', 'json');
+    //             formData.append('jobId', jobId);
+    //             formData.append('batch', JSON.stringify(batch));
+    //             formData.append('total', entries.length);
+    //             formData.append('sourceLang', sourceLang);
+    //             formData.append('targetLang', targetLang);
 
-                await $.ajax({
-                    method: 'POST',
-                    url: '/admin/import/batch',
-                    data: formData,
-                    processData: false,
-                    contentType: false
-                });
+    //             await $.ajax({
+    //                 method: 'POST',
+    //                 url: '/admin/import/batch',
+    //                 data: formData,
+    //                 processData: false,
+    //                 contentType: false
+    //             });
 
-                const percent = Math.round( (end / entries.length) * 100 );
-                importForm.find('.progress_percentage').text(percent + '%');
-                importForm.find('.progress').css('width', percent + '%');
+    //             const percent = Math.round( (end / entries.length) * 100 );
+    //             importForm.find('.progress_percentage').text(percent + '%');
+    //             importForm.find('.progress').css('width', percent + '%');
 
-                currentBatch++;
-                sendNextBatch();
-            }
+    //             currentBatch++;
+    //             sendNextBatch();
+    //         }
 
-            sendNextBatch();
-        };
+    //         sendNextBatch();
+    //     };
 
-        reader.readAsText(file);
-    }
+    //     reader.readAsText(file);
+    // }
 
     function loadCSVData(file, delimiter) {
         const token = $('meta[name="csrf-token"]').attr('content');
@@ -363,7 +376,7 @@ window.importTranslations = function() {
             processData: false,
             success: function(response) {
                 if(response.status === 'success') {
-                    const loadedDataPreviewTable = buildLoadedDataPreviewTable(response.data);
+                    const loadedDataPreviewTable = buildLoadedDataPreviewTable(response.data.fileData, response.data.languages);
                     $('#data_preview').html(loadedDataPreviewTable);
                 }
                 else if(response.status === 'error') {
@@ -376,13 +389,24 @@ window.importTranslations = function() {
         });
     }
 
-    function handleCSVUpload(file, jobId, importForm) {
+    function handleCSVUpload(file, jobId, importFormProgressbar) {
         const formData = new FormData();
         const token = $('meta[name="csrf-token"]').attr('content');
+        const delimiter = $('input#delimiter').val();
+        const sourceWordName = $('#source_word_name').val();
+        const targetWordName = $('#translations_name').val();
+        const sourceLang = $('#source_lang').val();
+        const targetLang = $('#target_lang').val();
+
         formData.append('_token', token);
         formData.append('type', 'csv');
         formData.append('jobId', jobId);
         formData.append('file', file);
+        formData.append('delimiter', delimiter);
+        formData.append('sourceWordName', sourceWordName);
+        formData.append('targetWordName', targetWordName);
+        formData.append('sourceLang', sourceLang);
+        formData.append('targetLang', targetLang);
 
         $.ajax({
             method: 'POST',
@@ -390,8 +414,13 @@ window.importTranslations = function() {
             data: formData,
             processData: false,
             contentType: false,
-            success: function() {
-                checkCSVProgress(jobId, importForm);
+            success: function(response) {
+                if(response.status === 'success') {
+                    checkCSVProgress(jobId, importFormProgressbar);
+                }
+                else if(response.status === 'error') {
+                    toastr.error(response.message);
+                }
             },
             error: function(xhr) {
                 toastr.error('CSV upload error');
@@ -399,56 +428,52 @@ window.importTranslations = function() {
         });
     }
 
-    function checkCSVProgress(jobId, importForm) {
+    function checkCSVProgress(jobId, importFormProgressbar) {
         $.get('/admin/import/status/' + jobId, function(data) {
             const percent = Math.round(data.percent);
-            importForm.find('.progress_percentage').text(percent + '%');
-            importForm.find('.progress').css('width', percent + '%');
+            importFormProgressbar.find('.progress_percentage').text(percent + '%');
+            importFormProgressbar.find('.progress').css('width', percent + '%');
 
             if(percent < 100) {
-                setTimeout(() => checkCSVProgress(jobId, importForm), 500);
+                setTimeout(() => checkCSVProgress(jobId, importFormProgressbar), 500);
             }
             else {
-                hideProgress(importForm);
+                hideProgress(importFormProgressbar);
             }
         })
     }
 
-    function hideProgress(importForm) {
+    function hideProgress(importFormProgressbar) {
         setTimeout(function() {
-            importForm.removeClass('visible');
+            importFormProgressbar.removeClass('visible');
         }, 300);
     }
 
-    function buildLoadedDataPreviewTable(data) {
+    function buildLoadedDataPreviewTable(data, languages) {
         let html = `
-            <div class="table-wrap my-2 md:flex gap-2">
-                <form id="importForm">
-                    <h4 class="text-xl font-bold">Uploading schema</h4>
-                    <div class="my-2">
-                        <label for="source_word_name" class="fw-medium">Source Word Name</label>
-                        <input type="text" name="source_word_name" id="source_word_name" class="border rounded w-full text-gray-900">
-                    </div>
-                    <div class="my-2">
-                        <label for="translations_name" class="fw-medium">Translations Name</label>
-                        <input type="text" name="translations_name" id="translations_name" class="border rounded w-full text-gray-900">
-                    </div>
-                    <div class="my-2">
-                        <label for="source_lang" class="fw-medium">Source Language</label>
-                        <input type="text" name="source_lang" id="source_lang" class="border rounded w-full text-gray-900">
-                    </div>
-                    <div class="my-2">
-                        <label for="target_lang" class="fw-medium">Target Language</label>
-                        <input type="text" name="target_lang" id="target_lang" class="border rounded w-full text-gray-900">
-                    </div>
-                </form>
+            <form id="importForm">
+                <div class="table-wrap my-2 md:flex gap-2">
+                    <div class="form-group">
+                        <h4 class="text-xl font-bold">Uploading schema</h4>
+                        <div class="my-2">
+                            <label for="source_word_name">Source Word Name</label>
+                            <input type="text" name="source_word_name" id="source_word_name" class="border rounded w-full text-gray-900">
+                        </div>
+                        <div class="my-2">
+                            <label for="translations_name">Translations Name</label>
+                            <input type="text" name="translations_name" id="translations_name" class="border rounded w-full text-gray-900">
+                        </div>`;
 
+        html += buildSelectInputForLanguage(languages, 'Source Lang', 'source_lang');
+        html += buildSelectInputForLanguage(languages, 'Target Lang', 'target_lang');
+
+        html += `</div>
                 <div class="import-table">
                     <div class="grid-row header">
                         <div>Column</div>
                         <div>Values</div>
                     </div>
-                    <div class="grid-row">`;
+                <div class="grid-row">`;
 
         $.each(data, function(key, item) {
             html += `
@@ -462,11 +487,34 @@ window.importTranslations = function() {
         });
 
         html += `</div>
+                    </div>
                 </div>
-            </div>
+                <button class="btn btn-primary" id="importBtn">Import</button
+            </form>
         `;
 
         return html;
+    }
+
+    function buildSelectInputForLanguage(languages, labelName, idName) {
+        let langSelectInput = `
+            <div class="my-2">
+                <label for="${idName}">${labelName}</label>
+                <select name="${idName}" id="${idName}">
+                    <option value>-- Select --</option>
+        `;
+        $.each(languages, function(i, lang) {
+            langSelectInput += `
+                    <option value="${lang.id}">${lang.name}</option>
+                </div>
+            `;
+        });
+        langSelectInput += `
+                </select>
+            </div>
+        `;
+
+        return langSelectInput;
     }
 }
 

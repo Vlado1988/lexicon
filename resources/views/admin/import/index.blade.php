@@ -14,20 +14,20 @@
                         <div class="progress"></div>
                     </div>
                     <div class="my-2">
-                        <p class="text-lg">Upload file (.csv, .json) to import new translations.</p>
+                        <p class="text-lg">Upload file (.csv) to import new translations.</p>
                     </div>
                     <div class="body">
-                        <form id="importForm" action="{{ route('admin.import.init') }}" method="POST" enctype="multipart/form-data">
+                        <form id="loadFileForm" action="{{ route('admin.import.init') }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <div class="my-2">
-                                <input type="file" name="file" id="" accept=".csv, .json">
+                                <input type="file" name="file" id="" accept=".csv">
                             </div>
                             <div class="my-2">
                                 <label for="delimiter">Delimiter</label>
                                 <input type="text" name="delimiter" id="delimiter" class="border rounded w-[50px] text-gray-900" maxlength="2">
                             </div>
 
-                            <button type="submit" class="btn btn-primary my-2" id="importBtn">Import</button>
+                            <button type="submit" class="btn btn-primary my-2" id="loadBtn">Load File Data</button>
                         </form>
 
                         <div id="data_preview"></div>

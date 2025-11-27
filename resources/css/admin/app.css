@@ -251,7 +251,7 @@ textarea::placeholder {
     color: #333;
 }
 
-#importForm {
+#importForm .form-group {
     min-width: 250px;
 }
 
@@ -265,7 +265,6 @@ textarea::placeholder {
     font-size: 1rem;
     cursor: default;
     height: max-content;
-    /* align-items: center; */
 }
 
 .grid-row {
@@ -274,7 +273,6 @@ textarea::placeholder {
 
 .grid-row.header {
     font-weight: bold;
-    /* background: #f3f3f3; */
     border-bottom: 1px solid #e5e5e5;
     border-right: 1px solid #e5e5e5;
 }
