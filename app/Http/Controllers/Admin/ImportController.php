@@ -122,40 +122,6 @@ class ImportController extends Controller
         return response()->json(['percent' => $percent]);
     }
 
-
-
-    // public function importBatch(Request $request)
-    // {
-    //     $type = $request->input('type');
-    //     $jobId = $request->input('jobId');
-    //     $total = (int) $request->input('total');
-
-    //     if($type === 'json') {
-    //         $batch = json_decode($request->input('batch'), true);
-    //         $sourceLang = $request->input('sourceLang');
-    //         $targetLang = $request->input('targetLang');
-
-    //         foreach($batch as $item) {
-    //             $translations = $item['translation'] ?? [];
-    //             if(is_string($translations)) $translations = [$translations];
-
-    //             $this->insertTranslation(
-    //                 $item['word'],
-    //                 $translations,
-    //                 $sourceLang,
-    //                 $targetLang
-    //             );
-    //         }
-
-    //         // update progress
-    //         $processed = cache()->get("import_progress_{$jobId}", 0);
-    //         $processed += count($batch);
-    //         cache()->put("import_progress_{$jobId}", $processed, 3600);
-
-    //         return response(['status' => 'success']);
-    //     }
-    // }
-
     public function loadCsvData(Request $request)
     {
         if(!$request->hasFile('file')) {

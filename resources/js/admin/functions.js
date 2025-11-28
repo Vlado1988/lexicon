@@ -298,68 +298,6 @@ window.importTranslations = function() {
         }
     });
 
-    // function handleJSONUpload(file, jobId, importForm) {
-    //     const reader = new FileReader();
-
-    //     reader.onload = function(e) {
-    //         let json;
-    //         try {
-    //             json = JSON.parse(e.target.result);
-    //         } catch (err) {
-    //             toastr.error('Invalid JSON: ' + err.message);
-    //             return;
-    //         }
-
-    //         const entries = json.entries;
-    //         const sourceLang = json.meta.source_lang;
-    //         const targetLang = json.meta.target_lang;
-
-    //         const batchSize = 300;
-    //         let currentBatch = 0;
-
-    //         async function sendNextBatch() {
-    //             const start = currentBatch * batchSize;
-    //             const end = start + batchSize;
-    //             const batch = entries.slice(start, end);
-
-    //             if(batch.length === 0) {
-    //                 toastr.success('Import Done');
-    //                 hideProgress(importForm);
-    //                 return;
-    //             }
-
-    //             const formData = new FormData();
-    //             const token = $('meta[name="csrf-token"]').attr('content');
-    //             formData.append('_token', token);
-    //             formData.append('type', 'json');
-    //             formData.append('jobId', jobId);
-    //             formData.append('batch', JSON.stringify(batch));
-    //             formData.append('total', entries.length);
-    //             formData.append('sourceLang', sourceLang);
-    //             formData.append('targetLang', targetLang);
-
-    //             await $.ajax({
-    //                 method: 'POST',
-    //                 url: '/admin/import/batch',
-    //                 data: formData,
-    //                 processData: false,
-    //                 contentType: false
-    //             });
-
-    //             const percent = Math.round( (end / entries.length) * 100 );
-    //             importForm.find('.progress_percentage').text(percent + '%');
-    //             importForm.find('.progress').css('width', percent + '%');
-
-    //             currentBatch++;
-    //             sendNextBatch();
-    //         }
-
-    //         sendNextBatch();
-    //     };
-
-    //     reader.readAsText(file);
-    // }
-
     function loadCSVData(file, delimiter) {
         const token = $('meta[name="csrf-token"]').attr('content');
 
@@ -420,10 +358,12 @@ window.importTranslations = function() {
                 }
                 else if(response.status === 'error') {
                     toastr.error(response.message);
+                    hideProgress(importFormProgressbar);
                 }
             },
             error: function(xhr) {
                 toastr.error('CSV upload error');
+                hideProgress(importFormProgressbar);
             }
         });
     }
