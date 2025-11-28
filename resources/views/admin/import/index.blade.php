@@ -9,10 +9,6 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <div class="progressbar" id="importProgressbar">
-                        <div class="progress_percentage">0%</div>
-                        <div class="progress"></div>
-                    </div>
                     <div class="my-2">
                         <p class="text-lg">Upload file (.csv) to import new translations.</p>
                     </div>
@@ -31,6 +27,11 @@
                         </form>
 
                         <div id="data_preview"></div>
+
+                        <div class="progressbar" id="importProgressbar">
+                            <div class="progress_percentage">0%</div>
+                            <div class="progress"></div>
+                        </div>
                     </div>
                 </div>
             </div>

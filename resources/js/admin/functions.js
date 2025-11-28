@@ -395,13 +395,14 @@ window.importTranslations = function() {
                 <div class="table-wrap my-2 md:flex gap-2">
                     <div class="form-group">
                         <h4 class="text-xl font-bold">Uploading schema</h4>
+                        <p>Drag & drop values from Column to set up source word and translations</p>
                         <div class="my-2">
                             <label for="source_word_name">Source Word Name</label>
-                            <input type="text" name="source_word_name" id="source_word_name" class="border rounded w-full text-gray-900">
+                            <input type="text" name="source_word_name" id="source_word_name" class="border rounded w-full text-gray-900" readonly>
                         </div>
                         <div class="my-2">
                             <label for="translations_name">Translations Name</label>
-                            <input type="text" name="translations_name" id="translations_name" class="border rounded w-full text-gray-900">
+                            <input type="text" name="translations_name" id="translations_name" class="border rounded w-full text-gray-900" readonly>
                         </div>`;
 
         html += buildSelectInputForLanguage(languages, 'Source Lang', 'source_lang');
