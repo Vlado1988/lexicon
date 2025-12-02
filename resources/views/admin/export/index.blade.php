@@ -15,7 +15,7 @@
                     <div class="body">
                         <form id="loadFileForm" action="{{ route('admin.import.init') }}" method="POST" enctype="multipart/form-data">
                             @csrf
-                            <div class="
+                            {{-- <div class="
                                 lang-select-container
                                 grid
                                 sm:grid-cols-[max-content_50px_max-content]
@@ -43,6 +43,31 @@
                                 </div>
                                 <div class="flex flex-col order-6">
                                     <select name="target_language" id="target_word_language" class="flex-1 min-w-[200px] text-gray-500">
+                                        <option value="">-- Select --</option>
+                                        @foreach ($languages as $language)
+                                            <option value="{{ $language->id }}" {{ request()->target_language == $language->id ? 'selected' : '' }}>{{ $language->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div> --}}
+                            <div class="flex flex-wrap justify-start items-center gap-2">
+                                <div class="flex flex-col min-w-[200px] w-full sm:w-fit">
+                                    <label for="source_word_language">source word language</label>
+                                    <select name="source_language" id="source_word_language" class="text-gray-500">
+                                        <option value="">-- Select --</option>
+                                        @foreach ($languages as $language)
+                                            <option value="{{ $language->id }}" {{ request()->source_language == $language->id ? 'selected' : '' }}>{{ $language->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="text-center w-full sm:w-fit sm:mt-6">
+                                    <i class="fa-solid fa-arrow-right-long"></i>
+                                </div>
+
+                                <div class="flex flex-col min-w-[200px] w-full sm:w-fit">
+                                    <label for="target_word_language">target word language</label>
+                                    <select name="target_language" id="target_word_language" class="text-gray-500">
                                         <option value="">-- Select --</option>
                                         @foreach ($languages as $language)
                                             <option value="{{ $language->id }}" {{ request()->target_language == $language->id ? 'selected' : '' }}>{{ $language->name }}</option>
