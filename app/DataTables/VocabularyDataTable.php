@@ -25,7 +25,12 @@ class VocabularyDataTable extends DataTable
             ->addColumn('action', function($query) {
                 $langCode = request()->route('lang_code') ? request()->route('lang_code') . '/' : '';
                 $editBtn = '<a href="' . url('/admin/vocabulary/' . $langCode . $query->id . '/edit') . '"><i class="fa-solid fa-pen-to-square"></i></a>';
-                $deleteBtn = '<a href="' . url('/admin/vocabulary/' . $query->id . '/destroy') . '" class="delete_item" data-url="'. route('admin.vocabulary.destroy', $query->id) .'" data-id="'. $query->id .'"><i class="fa-solid fa-trash"></i></a>';
+                $deleteBtn = '
+                    <form action="' . url('/admin/vocabulary/' . $query->id . '/destroy') . '" class="delete_item">
+                        '. csrf_field() .'
+                        '. method_field("DELETE") .'
+                        <button><i class="fa-solid fa-trash"></i></button>
+                    </form>';
 
                 return '<div class="flex gap-2">' . $editBtn . $deleteBtn . '</div>';
             })

@@ -116,10 +116,10 @@
                     });
                 });
 
-                $(document).on('click', '.delete_item', function(e) {
+                $(document).on('submit', '.delete_item', function(e) {
                     e.preventDefault();
 
-                    const url = $(this).data('url');
+                    const url = $(this).attr('action');
                     const dataId = $(this).data('id');
 
                     Swal.fire({
