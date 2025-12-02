@@ -58,6 +58,15 @@ a {
     background-color: rgba(233, 233, 233, .9);
 }
 
+.btn-success {
+    background-color: rgba(9, 189, 12, 1);
+    color: #f8f8f8;
+}
+.btn-success:hover,
+.btn-success:focus {
+    background-color: rgba(9, 189, 12, .9);
+}
+
 
 /* Custom Switch Indicator */
 .custom-switch {

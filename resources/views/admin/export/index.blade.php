@@ -44,6 +44,13 @@
 
                             <button type="submit" class="btn btn-primary my-2" id="loadBtn">Export</button>
                         </form>
+
+                        <div class="progressbar" id="exportProgressbar">
+                            <div class="progress_percentage">0%</div>
+                            <div class="progress"></div>
+                        </div>
+
+                        <div id="downloadBtnContainer"></div>
                     </div>
                 </div>
             </div>
@@ -53,8 +60,7 @@
     @push('scripts')
         <script>
             $(document).ready(function () {
-                importTranslations();
-                dragAndDropFunctionality();
+                sendExportForm();
             });
         </script>
     @endpush

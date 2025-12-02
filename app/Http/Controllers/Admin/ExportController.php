@@ -22,6 +22,6 @@ class ExportController extends Controller
     {
         $translations = Word::getTranslationsForLanguages($request->source_language, $request->target_language)->get();
 
-        return response(['status' => 'success', 'translations' => $translations]);
+        return response(['status' => 'success', 'message' => 'Translations obtained successfully', 'translations' => $translations]);
     }
 }

@@ -477,3 +477,90 @@ window.dragAndDropFunctionality = function() {
         $(this).val(e.originalEvent.dataTransfer.getData("text/plain"));
     });
 }
+
+window.sendExportForm = function() {
+    $('#exportForm').on('submit', function(e) {
+        e.preventDefault();
+
+        const formData = $(this).serialize();
+        const delimiter = ';';
+
+        $.ajax({
+            method: 'POST',
+            url: "/admin/export/init",
+            data: formData,
+            success: function(response) {
+                let exportedData = '';
+                let sourceLangCode = '';
+                let targetLangCode = '';
+                if(response.status === 'success') {
+
+                    if(Array.isArray(response.translations)) {
+                        if(response.translations.length == 0) {
+                            $('#downloadBtnContainer').text('Nothing to export');
+                            return false;
+                        }
+                        const translationsCount = response.translations.length;
+
+                        // show progressbar
+                        const progressbar = $('#exportProgressbar');
+                        initProgressbar(progressbar);
+                        $('#downloadBtn').remove();
+
+                        $.each(response.translations, function(i, item) {
+                            if(sourceLangCode == '') sourceLangCode = item.source_language;
+                            if(targetLangCode == '') targetLangCode = item.target_language;
+                            if(exportedData == '') exportedData = `${sourceLangCode};${targetLangCode}\r\n`;
+
+                            exportedData += `${item.source_word};${item.target_word}\r\n`;
+
+                            // count progress percentage
+                            const percent = Math.round((100 / translationsCount) * (i+1));
+                            updateProgressbar(progressbar, percent);
+                        });
+
+                        setTimeout(function() {
+                            progressbar.removeClass('visible');
+                            generateDownloadButton(exportedData, sourceLangCode, targetLangCode);
+                            toastr.success('Export created successfully');
+                        }, 500);
+                    }
+                }
+                else if (response.status === 'error') {
+                    toastr.error(response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                toastr.error(error);
+            }
+        });
+    });
+
+    function generateDownloadButton(exportedData, sourceLangCode, targetLangCode) {
+        const blob = new Blob([exportedData], { type: "text/csv;charset=utf-8;" });
+        const downloadUrl = URL.createObjectURL(blob);
+        const currentDate = new Date();
+        const fileName = `${currentDate.toLocaleDateString('sv-SE')}_${sourceLangCode}-${targetLangCode}_export.csv`;
+        const downloadBtn = $(`<a id="downloadBtn" class="btn btn-success my-2 inline-block" href="${downloadUrl}" download="${fileName}">Donwload Exported Data (.csv)</a>`);
+
+        insertDownloadButton(downloadBtn, downloadUrl);
+    }
+
+    function initProgressbar(progressbar) {
+        progressbar.addClass('visible');
+        updateProgressbar(progressbar, 0);
+    }
+
+    function updateProgressbar(progressbar, percent) {
+        progressbar.find('.progress_percentage').text(`${percent}%`);
+        progressbar.find('.progress').css('width', percent + '%');
+    }
+
+    function insertDownloadButton(downloadBtn, downloadUrl) {
+        downloadBtn.on('click', function() {
+            setTimeout(() => URL.revokeObjectURL(downloadUrl), 100);
+        });
+
+        $('#downloadBtnContainer').html(downloadBtn);
+    }
+}
