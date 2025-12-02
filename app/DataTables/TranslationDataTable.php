@@ -31,7 +31,6 @@ class TranslationDataTable extends DataTable
                 $deleteUrl = route('admin.translation.destroy', $query->id) . $urlParams;
 
                 $editBtn = '<a href="' . url('/admin/translation/' . $query->id . '/edit?source_lang_id=' . $sourceLangId . '&target_lang_id=' . $targetLangId) . '"><i class="fa-solid fa-pen-to-square"></i></a>';
-                // $deleteBtn = '<a href="' . $deleteUrl . '" class="delete_item delete_translation_item" data-url="' . $deleteUrl . '" data-id="'. $query->id .'"><i class="fa-solid fa-trash"></i></a>';
                 $deleteBtn = '
                     <form action="' . $deleteUrl . '" class="delete_item delete_translation_item">
                         '. csrf_field() .'
