@@ -19,6 +19,9 @@
                         <li>
                             <a href="{{ route('admin.import.index') }}" class="block rounded py-2 px-4 transition duration-300 hover:bg-gray-300 dark:hover:bg-gray-600">Import</a>
                         </li>
+                        <li>
+                            <a href="{{ route('admin.export.index') }}" class="block rounded py-2 px-4 transition duration-300 hover:bg-gray-300 dark:hover:bg-gray-600">Export</a>
+                        </li>
                     </ul>
                 </nav>
             </div>

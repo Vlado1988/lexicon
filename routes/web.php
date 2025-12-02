@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ExportController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\LanguageController;
 use App\Http\Controllers\Admin\ProfileController;
@@ -69,6 +70,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
     Route::post('/import/loadCsvData', [ImportController::class, 'loadCSVData'])->name('import.loadCSVData');
     Route::post('/import/uploadCsv', [ImportController::class, 'uploadCSV']);
     Route::get('/import/status/{jobId}', [ImportController::class, 'importStatus']);
+
+    /** Export Routes */
+    Route::get('/export', [ExportController::class, 'index'])->name('export.index');
 } );
 
 require __DIR__.'/auth.php';
