@@ -73,6 +73,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
 
     /** Export Routes */
     Route::get('/export', [ExportController::class, 'index'])->name('export.index');
+    Route::post('/export/init', [ExportController::class, 'init'])->name('export.init');
 } );
 
 require __DIR__.'/auth.php';
