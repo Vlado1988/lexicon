@@ -30,9 +30,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
     /** Vocabulary Routes */
     Route::prefix('vocabulary')->name('vocabulary.')->group(function () {
         Route::prefix('{lang_code}')->name('lang.')->group(function () {
-            Route::pattern('lang_code', collect(
-                Language::pluck('code')->map(fn($c) => strtolower($c))
-            )->implode('|'));
+            if(\Schema::hasTable('languages')) {
+                Route::pattern('lang_code', collect(
+                    Language::pluck('code')->map(fn($c) => strtolower($c))
+                )->implode('|'));
+            }
 
             Route::get('/', [VocabularyController::class, 'index'])->name('index');
             Route::get('/create', [VocabularyController::class, 'create'])->name('create');
