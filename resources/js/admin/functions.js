@@ -497,7 +497,7 @@ window.sendExportForm = function() {
 
                     if(Array.isArray(response.translations)) {
                         if(response.translations.length == 0) {
-                            $('#downloadBtnContainer').text('Nothing to export');
+                            toastr.error('Nothing to export');
                             return false;
                         }
                         const translationsCount = response.translations.length;
