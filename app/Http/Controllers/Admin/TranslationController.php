@@ -32,7 +32,7 @@ class TranslationController extends Controller
      */
     public function create()
     {
-        $languages = Language::where('status', 'active')->orderBy('name')->get();
+        $languages = Language::orderBy('name')->get();
         return view('admin.translation.create', compact(
             'languages'
         ));

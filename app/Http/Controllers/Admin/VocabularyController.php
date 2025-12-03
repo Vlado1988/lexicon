@@ -10,24 +10,9 @@ use Illuminate\Http\Request;
 
 class VocabularyController extends Controller
 {
-    // public function __construct()
-    // {
-    //     $langCode = request()->route('lang_code') ?: null;
-
-    //     if($langCode) {
-    //         $codeList = Language::pluck('code')
-    //             ->map(fn($c) => strtolower($c))
-    //             ->all();
-
-    //         if(!in_array($langCode, $codeList)) {
-    //             abort(404);
-    //         }
-    //     }
-    // }
-
     public function index(VocabularyDataTable $dataTable)
     {
-        $languages = Language::where('status', 'active')->orderBy('name')->get();
+        $languages = Language::orderBy('name')->get();
         return $dataTable->render('admin.vocabulary.index', [
             'languages' => $languages,
         ]);
@@ -36,7 +21,7 @@ class VocabularyController extends Controller
     public function create()
     {
         $langCode = request()->lang_code;
-        $languages = Language::where('status', 'active')->orderBy('name')->get();
+        $languages = Language::orderBy('name')->get();
 
         return view('admin.vocabulary.create', compact(
             'languages',
@@ -85,7 +70,7 @@ class VocabularyController extends Controller
     {
         $editWord = Word::findOrFail($request->word_id);
         $langCode = $request->lang_code;
-        $languages = Language::where('status', 'active')->orderBy('name')->get();
+        $languages = Language::orderBy('name')->get();
 
         return view('admin.vocabulary.edit', compact(
             'languages',
