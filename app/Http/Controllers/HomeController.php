@@ -24,12 +24,17 @@ class HomeController extends Controller
             'target_language' => ['required', 'numeric'],
         ]);
 
+        $source_language = $request->source_language;
+        $target_language = $request->target_language;
+
         $languages = Language::where('status', 'active')->orderBy('name')->get();
-        $translations = Word::getTranslationsByWordLike($request->search_text, $request->source_language, $request->target_language)->get();
+        $translations = Word::getTranslationsByWordLike($request->search_text, $source_language, $target_language)->get();
 
         return view('home', compact(
             'languages',
-            'translations'
+            'translations',
+            'source_language',
+            'target_language'
         ));
     }
 }

@@ -50,6 +50,12 @@ main {
 
 .translation-item {
     position: relative;
+    transition: .3s;
+}
+
+.translation-item:hover,
+.translation-item:focus {
+    text-shadow: 0 0 2px rgba(50,50,50,.2);
 }
 
 .translation-item::before {

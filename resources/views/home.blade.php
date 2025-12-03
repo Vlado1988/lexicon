@@ -29,16 +29,22 @@
 
     @if(isset($translations))
         <table class="translation-table">
-        @foreach ($translations as $translation)
-            @php
-                $targetWords = explode(', ', $translation->target_word);
-                $targetWords = format_translations($targetWords, '<ul>', '</ul>', '<li class="translation-item">', '</li>');
-            @endphp
+        @if($translations->count() > 0)
+            @foreach ($translations as $translation)
+                @php
+                    $targetWords = explode(', ', $translation->target_word);
+                    $targetWords = format_translations($targetWords, $source_language, $target_language, '<ul>', '</ul>', '<li class="translation-item">', '</li>');
+                @endphp
+                <tr>
+                    <td>{{ $translation->source_word }}</td>
+                    <td>{!! $targetWords !!}</td>
+                </tr>
+            @endforeach
+        @else
             <tr>
-                <td>{{ $translation->source_word }}</td>
-                <td>{!! $targetWords !!}</td>
+                <td colspan="2" class="italic">'<strong>{{ request()->search_text }}</strong>' Nothing found</td>
             </tr>
-        @endforeach
+        @endif
         </table>
     @endif
 @endsection
