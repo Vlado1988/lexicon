@@ -156,7 +156,7 @@ class ImportController extends Controller
         }
 
         $loaded_data = array_map('array_filter', $csv_data);
-        $languages = Language::where('status', 'active')->orderBy('name')->get();
+        $languages = Language::orderBy('name')->get();
 
         return response(['status' => 'success', 'message' => 'Data loaded successfully', 'data' => [
             'languages' => $languages,

@@ -21,7 +21,7 @@ class TranslationController extends Controller
      */
     public function index(TranslationDataTable $dataTable)
     {
-        $languages = Language::where('status', 'active')->orderBy('name')->get();
+        $languages = Language::orderBy('name')->get();
         return $dataTable->render('admin.translation.index', compact(
             'languages'
         ));
