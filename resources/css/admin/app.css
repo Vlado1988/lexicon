@@ -34,6 +34,7 @@ a {
 
 .btn-primary {
     background-color: rgb(45, 35, 222);
+    color: white;
 }
 
 .btn-primary:hover,

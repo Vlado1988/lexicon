@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="themeSwitcher()" x-bind:class="theme">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -24,6 +24,10 @@
         @vite(['resources/css/admin/app.css', 'resources/js/admin/app.js'])
     </head>
     <body class="font-sans antialiased">
+        <button @click="toggleTheme()" class="p-2 rounded bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800">
+            <span x-text="modeText"></span>
+            <span x-text="modeIcon"></span>
+        </button>
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
             @include('admin.layouts.navigation')
 
@@ -48,7 +52,7 @@
         </div>
 
         <!-- FontAwesome Scripts -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/js/all.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/js/all.min.js" data-fa-i2svg="false"></script>
         <!-- DataTables Scripts -->
         <script src="//cdn.datatables.net/2.3.2/js/dataTables.min.js"></script>
         <!-- Toastr Scripts -->
@@ -80,6 +84,41 @@
             @if(session('warning'))
                 toastr.warning("{{ session('warning') }}");
             @endif
+        </script>
+
+        <script>
+            function themeSwitcher() {
+                return {
+                    theme: localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
+                    // modeText: localStorage.getItem('theme') === 'light' ? 'Dark Mode' : 'Light Mode',
+                    // modeIcon: localStorage.getItem('theme') === 'light' ? 'fa-regular fa-moon' : 'fa-regular fa-sun',
+                    modeText: '',
+                    modeIcon: '',
+
+                    init() {
+                        this.setModeValues();
+                        document.documentElement.classList.toggle('dark', this.theme === 'dark');
+                    },
+
+                    toggleTheme() {
+                        this.theme = this.theme === 'dark' ? 'light' : 'dark';
+                        localStorage.setItem('theme', this.theme);
+
+                        document.documentElement.classList.toggle('dark', this.theme === 'dark');
+                        this.setModeValues();
+                    },
+
+                    setModeValues() {
+                        if(this.theme === 'dark') {
+                            this.modeText = 'Light Mode';
+                            this.modeIcon =  '☀️';
+                        } else {
+                            this.modeText = 'Dark Mode';
+                            this.modeIcon = '🌙';
+                        }
+                    }
+                }
+            }
         </script>
 
         <script type="modul">
