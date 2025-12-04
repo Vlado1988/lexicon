@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ImportCsvJob;
 use App\Models\Language;
 use App\Models\Translation;
 use App\Models\Word;
@@ -203,6 +204,45 @@ class ImportController extends Controller
         $filePath = $file->getRealPath();
         $delimiter = $request->input('delimiter') ?: ";";
 
+        // $rows = [];
+        // if(($handle = fopen($filePath, "r")) !== false) {
+        //     $headers = fgetcsv($handle, 0, $delimiter);
+        //     $headers = array_map(fn($h) => str_replace(' ', '_', $h), $headers);
+
+        //     while(($row = fgetcsv($handle, 0, $delimiter)) !== false) {
+        //         if(count($row) == 0 || trim(implode('', $row)) === '') continue;
+        //         $rows[] = array_combine($headers, $row);
+        //     }
+        //     fclose($handle);
+        // }
+
+        // $batchSize = 300;
+        // $total = count($rows);
+
+        // cache()->put("import_total_{$jobId}", $total, 3600);
+        // cache()->put("import_progress_{$jobId}", 0, 3600);
+
+        // $batches = array_chunk($rows, $batchSize);
+
+        // foreach($batches as $batch) {
+        //     foreach($batch as $item) {
+        //         if(empty($item[$sourceWordName]) || empty($item[$targetWordName])) continue;
+
+        //         $translations = explode(',', $item[$targetWordName]) ?? [];
+
+        //         $this->insertTranslation(
+        //             $item[$sourceWordName],
+        //             array_map('trim', $translations),
+        //             $sourceLangId,
+        //             $targetLangId
+        //         );
+        //     }
+
+        //     $processed = cache()->get("import_progress_{$jobId}", 0);
+        //     $processed += count($batch);
+        //     cache()->put("import_progress_{$jobId}", $processed, 3600);
+        // }
+
         $rows = [];
         if(($handle = fopen($filePath, "r")) !== false) {
             $headers = fgetcsv($handle, 0, $delimiter);
@@ -215,31 +255,24 @@ class ImportController extends Controller
             fclose($handle);
         }
 
-        $batchSize = 300;
+        // Nastav cache pre progress
         $total = count($rows);
-
         cache()->put("import_total_{$jobId}", $total, 3600);
         cache()->put("import_progress_{$jobId}", 0, 3600);
 
+        // Rozdelíme riadky na batchy a dispatchujeme joby
+        $batchSize = 300;
         $batches = array_chunk($rows, $batchSize);
 
         foreach($batches as $batch) {
-            foreach($batch as $item) {
-                if(empty($item[$sourceWordName]) || empty($item[$targetWordName])) continue;
-
-                $translations = explode(',', $item[$targetWordName]) ?? [];
-
-                $this->insertTranslation(
-                    $item[$sourceWordName],
-                    array_map('trim', $translations),
-                    $sourceLangId,
-                    $targetLangId
-                );
-            }
-
-            $processed = cache()->get("import_progress_{$jobId}", 0);
-            $processed += count($batch);
-            cache()->put("import_progress_{$jobId}", $processed, 3600);
+            ImportCsvJob::dispatch(
+                $batch,
+                $sourceWordName,
+                $targetWordName,
+                (int)$sourceLangId,
+                (int)$targetLangId,
+                $jobId
+            );
         }
 
         return response(['status' => 'success']);

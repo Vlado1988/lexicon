@@ -375,7 +375,7 @@ window.importTranslations = function() {
             importFormProgressbar.find('.progress').css('width', percent + '%');
 
             if(percent < 100) {
-                setTimeout(() => checkCSVProgress(jobId, importFormProgressbar), 500);
+                setTimeout(() => checkCSVProgress(jobId, importFormProgressbar), 250);
             }
             else {
                 hideProgress(importFormProgressbar);
