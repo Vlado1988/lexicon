@@ -441,7 +441,7 @@ window.importTranslations = function() {
         let langSelectInput = `
             <div class="my-2">
                 <label for="${idName}">${labelName}</label>
-                <select name="${idName}" id="${idName}">
+                <select name="${idName}" id="${idName}" class="border rounded w-full text-gray-900">
                     <option value>-- Select --</option>
         `;
         $.each(languages, function(i, lang) {
