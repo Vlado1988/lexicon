@@ -24,10 +24,6 @@
         @vite(['resources/css/admin/app.css', 'resources/js/admin/app.js'])
     </head>
     <body class="font-sans antialiased">
-        <button @click="toggleTheme()" class="p-2 rounded bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800">
-            <span x-text="modeText"></span>
-            <span x-text="modeIcon"></span>
-        </button>
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
             @include('admin.layouts.navigation')
 
@@ -42,9 +38,10 @@
 
             <!-- Page Content -->
             <main class="sm:flex">
-                <aside>
+                <div class="pt-6 pb-3 sm:py-12">
+                    @include('admin.layouts.mode-toggler')
                     @include('admin.layouts.navbar')
-                </aside>
+                </div>
                 <article class="flex-1 overflow-hidden">
                     {{ $slot }}
                 </article>
