@@ -15,12 +15,12 @@ class ImportCsvJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $rows;
-    protected $sourceWordName;
-    protected $targetWordName;
-    protected $sourceLangId;
-    protected $targetLangId;
-    protected $jobId;
+    public $rows;
+    public $sourceWordName;
+    public $targetWordName;
+    public $sourceLangId;
+    public $targetLangId;
+    public $jobId;
 
     public function __construct(array $rows, string $sourceWordName, string $targetWordName, int $sourceLangId, int $targetLangId, string $jobId)
     {
@@ -59,34 +59,42 @@ class ImportCsvJob implements ShouldQueue
         Cache::increment($key);
     }
 
-    private function insertTranslation(string $source_word, array $target_words, int $source_lang_id, int $target_lang_id)
+    private function insertTranslation(string $source_words, array $target_words, int $source_lang_id, int $target_lang_id)
     {
-        $sourceWordResult = Word::firstOrCreate(
-            ['word' => trim($source_word), 'lang_id' => $source_lang_id]
-        );
+        // explode if multiple words splitted with comma (,) occure
+        // array_map to eliminate eventional white space before the first word
+        $sourceWordsArr = array_map('trim', explode(',', $source_words));
 
-        foreach ($target_words as $targetWord) {
-            $targetWordTrimmed = trim($targetWord);
-
-            $targetWordResult = Word::firstOrCreate(
-                ['word' => $targetWordTrimmed, 'lang_id' => $target_lang_id]
+        // loop through every source word
+        foreach($sourceWordsArr as $source_word) {
+            $sourceWordResult = Word::firstOrCreate(
+                ['word' => trim($source_word), 'lang_id' => $source_lang_id]
             );
 
-            $exists = Translation::where(function($q) use ($sourceWordResult, $targetWordResult) {
-                $q->where('source_word_id', $sourceWordResult->id)
-                  ->where('target_word_id', $targetWordResult->id);
-            })
-            ->orWhere(function($q) use ($sourceWordResult, $targetWordResult) {
-                $q->where('source_word_id', $targetWordResult->id)
-                  ->where('target_word_id', $sourceWordResult->id);
-            })
-            ->exists();
+            // add translations to every source word
+            foreach ($target_words as $targetWord) {
+                $targetWordTrimmed = trim($targetWord);
 
-            if (!$exists) {
-                Translation::create([
-                    'source_word_id' => $sourceWordResult->id,
-                    'target_word_id' => $targetWordResult->id
-                ]);
+                $targetWordResult = Word::firstOrCreate(
+                    ['word' => $targetWordTrimmed, 'lang_id' => $target_lang_id]
+                );
+
+                $exists = Translation::where(function($q) use ($sourceWordResult, $targetWordResult) {
+                    $q->where('source_word_id', $sourceWordResult->id)
+                    ->where('target_word_id', $targetWordResult->id);
+                })
+                ->orWhere(function($q) use ($sourceWordResult, $targetWordResult) {
+                    $q->where('source_word_id', $targetWordResult->id)
+                    ->where('target_word_id', $sourceWordResult->id);
+                })
+                ->exists();
+
+                if (!$exists) {
+                    Translation::create([
+                        'source_word_id' => $sourceWordResult->id,
+                        'target_word_id' => $targetWordResult->id
+                    ]);
+                }
             }
         }
     }
