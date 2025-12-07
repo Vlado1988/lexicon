@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\DataTables\LanguageDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Language;
+use App\Models\Word;
 use Illuminate\Http\Request;
 
 class LanguageController extends Controller
@@ -72,7 +73,13 @@ class LanguageController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $lang = Language::findOrFail($id);
+
+        Word::where('lang_id', $id)->delete();
+
+        $lang->delete();
+
+        return response(['status' => 'success', 'message' => 'Language deleted successfully']);
     }
 
     public function changeStatus(Request $request)
@@ -82,5 +89,12 @@ class LanguageController extends Controller
         $language->save();
 
         return response(['status' => 'success', 'message' => 'Status changed']);
+    }
+
+    public function checkRelations(Request $request)
+    {
+        $relationsExists = Word::where('lang_id', $request->dataId)->exists();
+
+        return response(['status' => 'success', 'relationsExists' => $relationsExists]);
     }
 }

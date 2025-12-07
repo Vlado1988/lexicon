@@ -25,6 +25,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
 
     /** Language Routes */
     Route::post('/language/change-status', [LanguageController::class, 'changeStatus'])->name('language.change-status');
+    Route::post('/language/check-relations', [LanguageController::class, 'checkRelations'])->name('language.check-relations');
     Route::resource('/language', LanguageController::class)->names('language');
 
     /** Vocabulary Routes */

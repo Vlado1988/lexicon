@@ -22,7 +22,16 @@ class LanguageDataTable extends DataTable
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
         return (new EloquentDataTable($query))
-            ->addColumn('action', 'language.action')
+            ->addColumn('action', function($query) {
+                $deleteBtn = '
+                    <form action="' . url('/admin/language/' . $query->id) . '" class="delete_language" data-id="'.$query->id.'">
+                        '. csrf_field() .'
+                        '. method_field("DELETE") .'
+                        <button><i class="fa-solid fa-trash"></i></button>
+                    </form>';
+
+                return '<div class="flex gap-2">' . $deleteBtn . '</div>';
+            })
             ->addColumn('status', function($query) {
                 $switch = '<div class="flex justify-center gap-3"><span class="inactive_text_color">inactive</span> <label class="custom-switch"><input type="checkbox" class="custom-switch-input change_status" data-id="'.$query->id.'" data-url="'.route('admin.language.change-status').'"';
                 if($query->status === 'active') {

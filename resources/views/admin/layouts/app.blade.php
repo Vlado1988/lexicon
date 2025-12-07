@@ -87,8 +87,6 @@
             function themeSwitcher() {
                 return {
                     theme: localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
-                    // modeText: localStorage.getItem('theme') === 'light' ? 'Dark Mode' : 'Light Mode',
-                    // modeIcon: localStorage.getItem('theme') === 'light' ? 'fa-regular fa-moon' : 'fa-regular fa-sun',
                     modeText: '',
                     modeIcon: '',
 
@@ -203,6 +201,102 @@
                             });
                         }
                     });
+                });
+
+                $(document).on('submit', '.delete_language', function(e) {
+                    e.preventDefault();
+
+                    const dataId = $(this).data('id');
+
+                    Swal.fire({
+                        title: "Are you sure?",
+                        text: "You won't be able to revert this!",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#3085d6",
+                        cancelButtonColor: "#d33",
+                        confirmButtonText: "Yes, delete it!"
+                        }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                method: 'POST',
+                                url: `/admin/language/check-relations`,
+                                data: {
+                                    _token: $('meta[name="csrf-token"]').attr('content'),
+                                    dataId,
+                                },
+                                success: function(response) {
+                                    if(response.status === 'success') {
+                                        console.log(response.relationsExists)
+                                        if(response.relationsExists) {
+                                            Swal.fire({
+                                                title: "Are you sure?",
+                                                text: "There are translations assigned to this language. All data related to this language will be lost. Do you want to proceed?",
+                                                icon: "warning",
+                                                showCancelButton: true,
+                                                confirmButtonColor: "#3085d6",
+                                                cancelButtonColor: "#d33",
+                                                confirmButtonText: "Yes, delete it!"
+                                                }).then((result) => {
+                                                if (result.isConfirmed) {
+                                                    deleteLanguage(dataId);
+                                                }
+                                            });
+                                        }
+                                        else {console.log('ja som tu')
+                                            deleteLanguage(dataId);
+                                        }
+                                    }
+                                    else if(response.status === 'error') {
+                                        toastr.error(response.message);
+                                    }
+                                },
+                                error: function(xhr, status, error) {
+                                    Swal.fire({
+                                        title: "ERROR!",
+                                        text: error,
+                                        icon: "error"
+                                    });
+                                }
+                            });
+                        }
+                    });
+
+                    function deleteLanguage(dataId) {
+                        $.ajax({
+                            method: 'DELETE',
+                            url: `/admin/language/${dataId}`,
+                            data: {
+                                _token: $('meta[name="csrf-token"]').attr('content'),
+                                dataId,
+                            },
+                            success: function(response) {
+                                if(response.status === 'success') {
+                                    Swal.fire({
+                                        title: "Deleted!",
+                                        text: response.message,
+                                        icon: "success"
+                                    }).then((result) => {
+                                        window.location.reload();
+                                    });
+                                }
+                                else if(response.status === 'error') {
+                                    Swal.fire({
+                                        title: "ERROR!",
+                                        text: response.message,
+                                        icon: "error"
+                                    });
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                Swal.fire({
+                                    title: "ERROR!",
+                                    text: error,
+                                    icon: "error"
+                                });
+                            }
+                        });
+                    }
                 });
             });
         </script>
