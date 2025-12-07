@@ -174,6 +174,10 @@ class ImportController extends Controller
         $sourceLangId = $request->sourceLang;
         $targetLangId = $request->targetLang;
 
+        if($sourceLangId == $targetLangId) {
+            return response(['status' => 'error', 'message' => 'Source Language and Target language cannot be same']);
+        }
+
         $errorMsg = null;
 
         if(!$request->hasFile('file')) {
