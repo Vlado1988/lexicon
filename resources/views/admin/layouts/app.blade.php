@@ -22,6 +22,19 @@
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
         <!-- Scripts -->
         @vite(['resources/css/admin/app.css', 'resources/js/admin/app.js'])
+
+        <script>
+        (function() {
+            const storedMode = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if(storedMode === 'dark' || (!storedMode && prefersDark)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+        </script>
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
