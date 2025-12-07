@@ -284,15 +284,12 @@ window.importTranslations = function() {
             return;
         }
 
-        const importFormProgressbar = $('#importProgressbar');
-        importFormProgressbar.addClass('visible');
-
         const jobId = 'import_' + Date.now();
 
         const ext = file.name.split('.').pop().toLowerCase();
 
         if (ext === 'csv') {
-            handleCSVUpload(file, jobId, importFormProgressbar);
+            handleCSVUpload(file, jobId);
         } else {
             toastr.error('Format not supported');
         }
@@ -332,7 +329,7 @@ window.importTranslations = function() {
         });
     }
 
-    function handleCSVUpload(file, jobId, importFormProgressbar) {
+    function handleCSVUpload(file, jobId) {
         const formData = new FormData();
         const token = $('meta[name="csrf-token"]').attr('content');
         const delimiter = $('input#delimiter').val();
@@ -351,6 +348,13 @@ window.importTranslations = function() {
         formData.append('sourceLang', sourceLang);
         formData.append('targetLang', targetLang);
 
+        const importFormProgressbar = $('#importProgressbar');
+        const importBtn = $('#importBtn');
+        // show progress bar
+        importFormProgressbar.addClass('visible');
+        importBtn.addClass('hidden');
+
+
         $.ajax({
             method: 'POST',
             url: '/admin/import/uploadCsv',
@@ -359,39 +363,47 @@ window.importTranslations = function() {
             contentType: false,
             success: function(response) {
                 if(response.status === 'success') {
-                    checkCSVProgress(jobId, importFormProgressbar);
+                    checkCSVProgress(jobId, importFormProgressbar, importBtn);
                 }
                 else if(response.status === 'error') {
                     toastr.error(response.message);
-                    hideProgress(importFormProgressbar);
+                    hideProgress(importFormProgressbar, importBtn);
+                    importBtn.removeClass('hidden');
                 }
             },
             error: function(xhr) {
                 toastr.error('CSV upload error');
-                hideProgress(importFormProgressbar);
+                hideProgress(importFormProgressbar, importBtn);
             }
         });
     }
 
-    function checkCSVProgress(jobId, importFormProgressbar) {
+    function checkCSVProgress(jobId, importFormProgressbar, importBtn) {
         $.get('/admin/import/status/' + jobId, function(data) {
             const percent = Math.round(data.percent);
             importFormProgressbar.find('.progress_percentage').text(percent + '%');
             importFormProgressbar.find('.progress').css('width', percent + '%');
 
             if(percent < 100) {
-                setTimeout(() => checkCSVProgress(jobId, importFormProgressbar), 250);
+                setTimeout(() => checkCSVProgress(jobId, importFormProgressbar, importBtn), 250);
             }
             else {
-                hideProgress(importFormProgressbar);
+                hideProgress(importFormProgressbar, importBtn);
             }
         })
     }
 
-    function hideProgress(importFormProgressbar) {
+    function hideProgress(importFormProgressbar, importBtn) {
         setTimeout(function() {
             importFormProgressbar.removeClass('visible');
+            resetProgress(importFormProgressbar);
+            importBtn.removeClass('hidden');
         }, 300);
+    }
+
+    function resetProgress(importFormProgressbar) {
+        importFormProgressbar.find('.progress').css('width', '0%');
+        importFormProgressbar.find('.progress_percentage').text('0%');
     }
 
     function buildLoadedDataPreviewTable(data, languages) {

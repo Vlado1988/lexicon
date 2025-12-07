@@ -15,12 +15,12 @@ class ImportCsvJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $rows;
-    public $sourceWordName;
-    public $targetWordName;
-    public $sourceLangId;
-    public $targetLangId;
-    public $jobId;
+    protected $rows;
+    protected $sourceWordName;
+    protected $targetWordName;
+    protected $sourceLangId;
+    protected $targetLangId;
+    protected $jobId;
 
     public function __construct(array $rows, string $sourceWordName, string $targetWordName, int $sourceLangId, int $targetLangId, string $jobId)
     {
