@@ -28,6 +28,10 @@
 
                         <div id="data_preview"></div>
 
+                        <div id="loadingIcon" class="flex justify-center hidden">
+                            <img src="{{ asset('assets/icons/loading.gif') }}" width="150" alt="Loading icon">
+                        </div>
+
                         <div class="progressbar" id="importProgressbar">
                             <div class="progress_percentage">0%</div>
                             <div class="progress"></div>

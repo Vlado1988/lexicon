@@ -300,11 +300,14 @@ window.importTranslations = function() {
 
     function loadCSVData(file, delimiter) {
         const token = $('meta[name="csrf-token"]').attr('content');
+        const loadingIcon = $('#loadingIcon');
 
         let formData = new FormData();
         formData.append('_token', token);
         formData.append('file', file);
         formData.append('delimiter', delimiter);
+
+        loadingIcon.removeClass('hidden');
 
         $.ajax({
             method: 'POST',
@@ -320,6 +323,8 @@ window.importTranslations = function() {
                 else if(response.status === 'error') {
                     toastr.error(response.message);
                 }
+
+                loadingIcon.addClass('hidden');
             },
             error: function(xhr, status, error) {
                 toastr.error(error);
