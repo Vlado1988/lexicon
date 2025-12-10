@@ -112,6 +112,8 @@ AWS_USE_PATH_STYLE_ENDPOINT=false
 VITE_APP_NAME="${APP_NAME}"
 ```
 
+Set-up your password in this line `DB_PASSWORD=<your db password>`
+
 ### 2. Create database with name lexicon
 ### 3. Run following commands in terminal:
 (open terminal in your root project folder)
