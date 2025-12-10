@@ -389,6 +389,7 @@ window.importTranslations = function() {
             }
             else {
                 hideProgress(importFormProgressbar, importBtn);
+                toastr.success("Import Done");
             }
         })
     }
