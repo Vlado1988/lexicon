@@ -114,6 +114,7 @@ VITE_APP_NAME="${APP_NAME}"
 
 ### 2. Create database with name lexicon
 ### 3. Run following commands in terminal:
+(open terminal in your root project folder)
 ```bash
 composer install
 npm install
@@ -121,7 +122,6 @@ npm run build
 ```
 
 ### 4. Generate APP_KEY:
-open terminal in your root project folder and add:
 ```bash
 php artisan key:generate
 ```
