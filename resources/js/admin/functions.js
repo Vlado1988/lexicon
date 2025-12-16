@@ -31,6 +31,9 @@ window.switchLanguages = function() {
         sourceWordLangEl.val(lang2);
         targetWordLangEl.val(lang1);
 
+        const createTranslationUrl = `${window.location.origin}/admin/translation/create?source_lang_id=${lang2}&target_lang_id=${lang1}`;
+        $('#createTranslationBtn').attr('href', createTranslationUrl);
+
         let table = $('#translation-table').DataTable();
         table.ajax.reload();
     });
