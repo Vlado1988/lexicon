@@ -70,6 +70,11 @@ window.getDataOnLanguageSelect = function() {
 
 window.handleTargetWordsInputFunctionality = function() {
     $('#target_word_container #target_word').on('keydown', function(e) {
+        if(e.key == 'Enter') {
+            e.preventDefault();
+        }
+    });
+    $('#target_word_container #target_word').on('keyup', function(e) {
         if(e.key == ',' || e.key == 'Enter') {
             e.preventDefault();
             const word = ($(this).val()).trim();
@@ -86,9 +91,15 @@ window.handleTargetWordsInputFunctionality = function() {
                 })
                 .get();
 
-            if(!targetWordsListItemsTexts.includes(word)) {
-                const targetWordListItem = buildTargetWordListItem(word);
-                targetWordsListEl.children().last().before(targetWordListItem);
+            const words = word.split(',');
+            for(const singleWord of words) {
+                if(singleWord == '') continue;
+
+                const singleWordTrimmed = singleWord.trim();
+                if(!targetWordsListItemsTexts.includes(singleWordTrimmed)) {
+                    const targetWordListItem = buildTargetWordListItem(singleWordTrimmed);
+                    targetWordsListEl.children().last().before(targetWordListItem);
+                }
             }
 
             $(this).val('');
