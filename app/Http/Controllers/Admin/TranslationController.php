@@ -51,23 +51,27 @@ class TranslationController extends Controller
             'target_words.*' => ['required', 'string', 'max:255']
         ]);
 
+        $sourceLangId = $request->source_word_language;
+        $targetLangId = $request->target_word_language;
+        $targetWords = $request->target_words;
+
         if($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput()
-                ->with('old_target_words', $request->target_words);
+                ->with('old_target_words', $targetWords);
         }
 
-        if($request->source_word_language === $request->target_word_language) {
+        if($sourceLangId === $targetLangId) {
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Source language and target language cannot be same')
-                ->with('old_target_words', $request->target_words);
+                ->with('old_target_words', $targetWords);
         }
 
         $sourceWord = Word::whereRaw('BINARY `word` = ? AND `lang_id` = ?', [
             trim($request->source_word),
-            $request->source_word_language
+            $sourceLangId
         ])->first();
 
         if (! $sourceWord) {
@@ -78,6 +82,30 @@ class TranslationController extends Controller
         }
 
         $sourceWordId = $sourceWord->id;
+
+        // Delete old relations that not match new target words
+        Translation::query()
+            ->from('translations as t')
+            ->select('t.*')
+            ->join('words as sw', 't.source_word_id', '=', 'sw.id')
+            ->join('words as tw', 't.target_word_id', '=', 'tw.id')
+            ->where(function ($q) use ($sourceWordId, $targetWords, $sourceLangId, $targetLangId) {
+
+                // 1) source → target smer
+                $q->where('t.source_word_id', $sourceWordId)
+                ->whereIn('t.target_word_id', Word::select('id')->whereNotIn('word', $targetWords))
+                ->where('sw.lang_id', $sourceLangId)
+                ->where('tw.lang_id', $targetLangId);
+            })
+            ->orWhere(function ($q) use ($sourceWordId, $targetWords, $sourceLangId, $targetLangId) {
+
+                // 2) opačný smer (prehadzujú sa jazyky)
+                $q->where('t.target_word_id', $sourceWordId)
+                ->whereIn('t.source_word_id', Word::select('id')->whereNotIn('word', $targetWords))
+                ->where('sw.lang_id', $targetLangId)
+                ->where('tw.lang_id', $sourceLangId);
+            })
+            ->delete();
 
         // Save target words
         foreach($request->target_words as $targetWord) {
@@ -223,7 +251,7 @@ class TranslationController extends Controller
             ->delete();
 
         // Save target words
-        foreach($request->target_words as $targetWord) {
+        foreach($targetWords as $targetWord) {
             $targetWord = Word::firstOrCreate(
                 [
                     'word' => trim($targetWord),
