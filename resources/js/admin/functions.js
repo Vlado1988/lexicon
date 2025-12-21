@@ -58,10 +58,10 @@ window.getDataOnLanguageSelect = function() {
         //source_lang_id=3&target_lang_id=1
         const createTranslationBtn = $('#createTranslationBtn');
         const params = '?source_lang_id=' + sourceLang + '&target_lang_id=' + targetLang;
-        const createTranslationUrl = createTranslationBtn.attr('href') + params;
+        const createTranslationUrl = `${window.location.origin}/admin/translation${params}`;
         createTranslationBtn.attr('href', createTranslationUrl);
 
-        window.history.replaceState({}, '', window.location.href + params);
+        window.history.replaceState({}, '', createTranslationUrl);
 
         let table = $('#translation-table').DataTable();
         table.ajax.reload();

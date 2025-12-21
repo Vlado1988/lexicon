@@ -42,8 +42,11 @@ class VocabularyController extends Controller
 
         foreach($words as $word) {
             if(!Word::where('word', $word)->where('lang_id', $request->language)->exists()) {
+                $trimmedWord = trim($word);
+
                 $wordModel = new Word();
-                $wordModel->word = trim($word);
+                $wordModel->word = $trimmedWord;
+                $wordModel->search_key = generate_search_key($trimmedWord);
                 $wordModel->lang_id = $request->language;
                 $wordModel->save();
 
@@ -86,8 +89,11 @@ class VocabularyController extends Controller
             'word' => ['required', 'max:255'],
         ]);
 
+        $trimmedWord = trim($request->word);
+
         $wordModel = Word::findOrFail($request->word_id);
-        $wordModel->word = trim($request->word);
+        $wordModel->word = $trimmedWord;
+        $wordModel->search_key = generate_search_key($trimmedWord);
         $wordModel->lang_id = $request->language;
         $wordModel->save();
 

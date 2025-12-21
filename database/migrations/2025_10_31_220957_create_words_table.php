@@ -14,12 +14,14 @@ return new class extends Migration
         Schema::create('words', function (Blueprint $table) {
             $table->id();
             $table->string('word');
+            $table->string('search_key');
 
             $table->foreignId('lang_id')
                 ->constrained('languages')
                 ->onDelete('cascade');
 
             $table->index(['word', 'lang_id'], 'words_lang_id_word_index');
+            $table->index(['search_key', 'lang_id'], 'words_lang_id_search_key_index');
 
             $table->timestamps();
         });

@@ -75,8 +75,10 @@ class TranslationController extends Controller
         ])->first();
 
         if (! $sourceWord) {
+            $trimmedSourceWord = trim($request->source_word);
             $sourceWord = Word::create([
-                'word' => trim($request->source_word),
+                'word' => $trimmedSourceWord,
+                'search_key' => generate_search_key($trimmedSourceWord),
                 'lang_id' => $request->source_word_language,
             ]);
         }
@@ -115,8 +117,11 @@ class TranslationController extends Controller
             )->first();
 
             if (! $targetWordResult) {
+                $trimmedTargetWord = trim($targetWord);
+
                 $targetWordResult = Word::create([
-                    'word' => trim($targetWord),
+                    'word' => $trimmedTargetWord,
+                    'search_key' => generate_search_key($trimmedTargetWord),
                     'lang_id' => $request->target_word_language,
                 ]);
             }
@@ -218,8 +223,10 @@ class TranslationController extends Controller
                 ->with('old_target_words', $request->target_words);
         }
 
+        $trimmedSourceWord = trim($request->source_word);
         $sourceWord = Word::findOrFail($id);
-        $sourceWord->word = $request->source_word;
+        $sourceWord->word = $trimmedSourceWord;
+        $sourceWord->search_key = generate_search_key($trimmedSourceWord);
         $sourceWord->lang_id = $sourceLangId;
         $sourceWord->save();
 
@@ -252,9 +259,12 @@ class TranslationController extends Controller
 
         // Save target words
         foreach($targetWords as $targetWord) {
+            $trimmedTargetWord = trim($targetWord);
+
             $targetWord = Word::firstOrCreate(
                 [
-                    'word' => trim($targetWord),
+                    'word' => $trimmedTargetWord,
+                    'search_key' => generate_search_key($trimmedTargetWord),
                     'lang_id' => $request->target_word_language
                 ]
             );

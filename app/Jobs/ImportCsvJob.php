@@ -67,8 +67,14 @@ class ImportCsvJob implements ShouldQueue
 
         // loop through every source word
         foreach($sourceWordsArr as $source_word) {
+            $trimmedSourceWord = trim($source_word);
+
             $sourceWordResult = Word::firstOrCreate(
-                ['word' => trim($source_word), 'lang_id' => $source_lang_id]
+                [
+                    'word' => $trimmedSourceWord,
+                    'search_key' => generate_search_key($trimmedSourceWord),
+                    'lang_id' => $source_lang_id
+                ]
             );
 
             // add translations to every source word
@@ -76,7 +82,11 @@ class ImportCsvJob implements ShouldQueue
                 $targetWordTrimmed = trim($targetWord);
 
                 $targetWordResult = Word::firstOrCreate(
-                    ['word' => $targetWordTrimmed, 'lang_id' => $target_lang_id]
+                    [
+                        'word' => $targetWordTrimmed,
+                        'search_key' => generate_search_key($targetWordTrimmed),
+                        'lang_id' => $target_lang_id
+                    ]
                 );
 
                 $exists = Translation::where(function($q) use ($sourceWordResult, $targetWordResult) {

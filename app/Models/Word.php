@@ -9,6 +9,7 @@ class Word extends Model
 {
     protected $fillable = [
         'word',
+        'search_key',
         'lang_id',
     ];
 
@@ -158,8 +159,56 @@ class Word extends Model
             })
             ->where('sw.lang_id', $sourceLangId)
             ->where(function ($query) use ($word) {
-                $query->where('sw.word',  $word)
-                    ->orWhere('sw.word', 'like', "$word %");
+                // $query->where('sw.word',  $word)
+                //     ->orWhere('sw.word', 'like', "$word %");
+
+                // $query->whereRaw(
+                //         "
+                //         REPLACE(
+                //             REGEXP_REPLACE(sw.word, '[^[:alpha:][:digit:] ]', ''),
+                //             ' ',
+                //             ''
+                //         )
+                //         COLLATE utf8mb4_unicode_ci
+                //         =
+                //         REPLACE(
+                //             REGEXP_REPLACE(?, '[^[:alpha:][:digit:] ]', ''),
+                //             ' ',
+                //             ''
+                //         )
+                //         ",
+                //         [$word]
+                //     )
+                //     ->orWhereRaw(
+                //         "
+                //         REPLACE(
+                //             REGEXP_REPLACE(sw.word, '[^[:alpha:][:digit:] ]', ''),
+                //             ' ',
+                //             ''
+                //         )
+                //         COLLATE utf8mb4_unicode_ci
+                //         LIKE
+                //         CONCAT(
+                //             REPLACE(
+                //                 REGEXP_REPLACE(?, '[^[:alpha:][:digit:] ]', ''),
+                //                 ' ',
+                //                 ''
+                //             ),
+                //             '%'
+                //         )
+                //         ",
+                //         [$word]
+                //     );
+
+                $searchKey = strtolower(
+                    preg_replace('/[^[:alpha:][:digit:] ]/u', '', $word)
+                );
+                $searchKey = str_replace(' ', '', $searchKey);
+
+                $query->where(function ($query) use ($searchKey) {
+                    $query->where('sw.search_key', $searchKey)
+                        ->orWhere('sw.search_key', 'like', $searchKey.'%');
+                });
             })
             ->groupBy('sw.id', 'sw.word')
             ->selectRaw('

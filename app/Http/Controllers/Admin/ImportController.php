@@ -62,8 +62,11 @@ class ImportController extends Controller
                         ->first();
 
         if (! $sourceWordResult) {
+            $trimmedSourceWord = trim($source_word);
+
             $sourceWordResult = Word::create([
-                'word' => trim($source_word),
+                'word' => $trimmedSourceWord,
+                'search_key' => generate_search_key($trimmedSourceWord),
                 'lang_id' => $source_lang_id,
             ]);
         }
@@ -73,6 +76,7 @@ class ImportController extends Controller
         // Save target words
         foreach($target_words as $targetWord) {
             $targetWordTrimmed = trim($targetWord);
+
             $targetWordResult = Word::whereRaw('BINARY words.word = ?',[$targetWordTrimmed])
                                     ->where('lang_id', $target_lang_id)
                                     ->first();
@@ -80,6 +84,7 @@ class ImportController extends Controller
             if (! $targetWordResult) {
                 $targetWordResult = Word::create([
                     'word' => $targetWordTrimmed,
+                    'search_key' => generate_search_key($targetWordTrimmed),
                     'lang_id' => $target_lang_id,
                 ]);
             }

@@ -26,3 +26,29 @@ if(!function_exists('format_translations')) {
         return $wrapBefore . $targetWordsSanitized . $wrapAfter;
     }
 }
+
+if(!function_exists('generate_search_key')) {
+    /**
+     * Generate a normalized search key for a word.
+     * - Lowercases the word
+     * - Removes all punctuation and special characters
+     * - Removes spaces and hyphens
+     * - Keeps Unicode letters and digits
+     *
+     * @param string $word
+     * @return string
+     */
+    function generate_search_key(string $word): string
+    {
+        // lowercase
+        $searchKey = mb_strtolower($word, 'UTF-8');
+
+        // remove all non-letter, non-digit characters (keep Unicode letters)
+        $searchKey = preg_replace('/[^\p{L}\p{N}]/u', '', $searchKey);
+
+        // remove spaces (or could also remove hyphens if you want them equivalent)
+        $searchKey = str_replace(' ', '', $searchKey);
+
+        return $searchKey;
+    }
+}
