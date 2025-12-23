@@ -69,25 +69,33 @@ class ImportCsvJob implements ShouldQueue
         foreach($sourceWordsArr as $source_word) {
             $trimmedSourceWord = trim($source_word);
 
-            $sourceWordResult = Word::firstOrCreate(
-                [
+            $sourceWordResult = Word::whereRaw('BINARY words.word = ?', [$trimmedSourceWord])
+                            ->where('lang_id', $source_lang_id)
+                            ->first();
+
+            if (! $sourceWordResult) {
+                $sourceWordResult = Word::create([
                     'word' => $trimmedSourceWord,
                     'search_key' => generate_search_key($trimmedSourceWord),
-                    'lang_id' => $source_lang_id
-                ]
-            );
+                    'lang_id' => $source_lang_id,
+                ]);
+            }
 
             // add translations to every source word
             foreach ($target_words as $targetWord) {
                 $targetWordTrimmed = trim($targetWord);
 
-                $targetWordResult = Word::firstOrCreate(
-                    [
+                $targetWordResult = Word::whereRaw('BINARY words.word = ?',[$targetWordTrimmed])
+                                    ->where('lang_id', $target_lang_id)
+                                    ->first();
+
+                if (! $targetWordResult) {
+                    $targetWordResult = Word::create([
                         'word' => $targetWordTrimmed,
                         'search_key' => generate_search_key($targetWordTrimmed),
-                        'lang_id' => $target_lang_id
-                    ]
-                );
+                        'lang_id' => $target_lang_id,
+                    ]);
+                }
 
                 $exists = Translation::where(function($q) use ($sourceWordResult, $targetWordResult) {
                     $q->where('source_word_id', $sourceWordResult->id)
