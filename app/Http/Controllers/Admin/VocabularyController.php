@@ -36,7 +36,7 @@ class VocabularyController extends Controller
             'words' => ['required'],
         ]);
 
-        $words = explode(',', $request->words);
+        $words = explode(',', trim($request->words, ','));
 
         $wordsSaved = 0;
 
